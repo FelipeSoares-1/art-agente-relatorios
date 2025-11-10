@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, newsReports, InsertNewsReport } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,39 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+/**
+ * Save a generated news report to the database
+ */
+export async function saveNewsReport(report: InsertNewsReport): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save report: database not available");
+    return;
+  }
+
+  try {
+    await db.insert(newsReports).values(report);
+  } catch (error) {
+    console.error("[Database] Failed to save news report:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get all reports for a specific user
+ */
+export async function getUserReports(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get reports: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db.select().from(newsReports).where(eq(newsReports.userId, userId));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get user reports:", error);
+    return [];
+  }
+}

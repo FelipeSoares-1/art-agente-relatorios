@@ -25,4 +25,16 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Table to store generated news reports
+ */
+export const newsReports = mysqlTable("news_reports", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  period: mysqlEnum("period", ["24_horas", "7_dias"]).notNull(),
+  content: text("content").notNull(), // Markdown content
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type NewsReport = typeof newsReports.$inferSelect;
+export type InsertNewsReport = typeof newsReports.$inferInsert;
