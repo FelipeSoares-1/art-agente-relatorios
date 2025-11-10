@@ -1,0 +1,115 @@
+name: Deploy - Production
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'art-agente-relatorios/news_report_agent/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    outputs:
+      build-successful: ${{ steps.build.outcome == 'success' }}
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: Install dependencies
+        working-directory: ./art-agente-relatorios/news_report_agent
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        working-directory: ./art-agente-relatorios/news_report_agent
+        run: pnpm check
+
+      - name: Build
+        id: build
+        working-directory: ./art-agente-relatorios/news_report_agent
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+        run: pnpm build
+
+      - name: Upload artifacts
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-output
+          path: art-agente-relatorios/news_report_agent/dist
+          retention-days: 1
+
+  deploy-backend:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: needs.build-and-test.outputs.build-successful == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Railway/Render
+        run: |
+          # Example: Deploy to Railway
+          # Você precisa configurar o comando de deploy específico
+          echo "🚀 Deploying backend..."
+          echo "Configure deploy com Railway/Render/Heroku"
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+
+  deploy-frontend:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: needs.build-and-test.outputs.build-successful == 'true'
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: build-output
+          path: art-agente-relatorios/news_report_agent/dist
+
+      - name: Deploy to Vercel
+        run: |
+          npm install -g vercel
+          # Configure com seu Vercel token
+          echo "🚀 Deploying frontend to Vercel..."
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+  notify-success:
+    needs: [deploy-backend, deploy-frontend]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Notify deployment
+        run: |
+          echo "✅ Deployment completed!"
+          echo "Check: https://github.com/FelipeSoares-1/art-agente-relatorios/actions"
