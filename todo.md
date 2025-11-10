@@ -1,4 +1,4 @@
-# Agente de Relatórios de Notícias - TODO
+# A.R.T (Agente de Relatórios e Tendências) - TODO
 
 ## Funcionalidades Planejadas
 
@@ -10,4 +10,7 @@
 - [x] Exportação de relatório em Markdown
 - [x] Design responsivo e amigável
 - [x] Autenticação e controle de acesso
+- [x] Rebranding para A.R.T com identidade visual Artplan
+- [x] Atualizar cores e logo com identidade Artplan
+- [x] Refatorar interface mantendo UX/UI
 - [ ] Busca em tempo real com validação de links (Próximo: Integração com tool search real)
