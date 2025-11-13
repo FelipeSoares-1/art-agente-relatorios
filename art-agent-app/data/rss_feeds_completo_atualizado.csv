@@ -1,0 +1,55 @@
+Portal/Fonte,Domínio,Tipo de Conteúdo,Frequência de Atualização,RSS Feed URL,Relevância para Monitoramento,Origem
+Meio & Mensagem,meioemensagem.com.br,"Publicidade, Mídia, Comunicação, Agências",Diária,https://meioemensagem.com.br/feed,ALTA - Principal portal de publicidade do Brasil,Original
+Propmark,propmark.com.br,"Publicidade, Marketing, Agências, Mídia",Diária,https://propmark.com.br/feed,ALTA - Especializado em publicidade e marketing,Original
+AdNews,adnews.com.br,"Publicidade, Marketing, Agências, Criatividade",Diária,https://adnews.com.br/feed,ALTA - Cobertura abrangente de agências e campanhas,Original
+Janela,janela.com.br,"Publicidade, Propaganda, Comunicação",Diária,https://janela.com.br/feed,ALTA - Notícias diretas sobre agências,Original
+Marcas Pelo Mundo,marcaspelomundo.com.br,"Comunicação, Publicidade, Marcas",Semanal,https://marcaspelomundo.com.br/feed,MÉDIA - Cobertura sobre comunicação e marcas,Original
+Grandes Nomes da Propaganda,grandesnomesdapropaganda.com.br,"Publicidade, Propaganda, Agências",Variável,https://grandesnomesdapropaganda.com.br/feed,MÉDIA - Foco em publicidade e propaganda,Original
+Clube de Criação,clubedecriacao.com.br,"Criatividade, Agências, Prêmios, Anuário",Variável,https://clubedecriacao.com.br/feed,ALTA - Anuário e premiação de agências,Original
+Agência Caracará,agenciacarcara.com.br,"Publicidade, Comunicação, Agências",Variável,https://agenciacarcara.com.br/feed,MÉDIA - Cobertura geral de agências,Original
+AB9 Consultoria,ab9.com.br,"Publicidade, Comunicação, Brasília",Variável,https://ab9.com.br/feed,MÉDIA - Publicidade em Brasília,Original
+Dreamers,dreamers.gr,"Publicidade, Agências, Análise",Variável,https://dreamers.gr/feed,BAIXA - Análise estratégica ocasional,Original
+Vira Página,virapagina.com.br,"Publicidade, Comunicação",Variável,https://virapagina.com.br/feed,MÉDIA - Publicidade e comunicação,Original
+Vox News,voxnews.com.br,"Publicidade, Mídia, Comunicação",Variável,https://voxnews.com.br/feed,BAIXA - Publicidade como notícia geral,Original
+IstoÉ Dinheiro,istoedinheiro.com.br,"Negócios, Publicidade, Agências",Diária,https://istoedinheiro.com.br/feed,MÉDIA - Agências em contexto empresarial,Original
+Folha de S.Paulo,folha.uol.com.br,"Geral, Publicidade, Comunicação",Contínua,https://feeds.folha.uol.com.br/folha/indice,BAIXA - Publicidade em contexto geral,Original
+O Globo,oglobo.globo.com,"Geral, Publicidade, Comunicação",Contínua,https://oglobo.globo.com/rss/,BAIXA - Publicidade em contexto geral,Original
+Estadão,estadao.com.br,"Geral, Publicidade, Comunicação",Contínua,https://estadao.com.br/rss,BAIXA - Publicidade em contexto geral,Original
+Content Marketing Brasil,contentmarketingbrasil.com,"Marketing Digital, Conteúdo",Semanal,https://contentmarketingbrasil.com/noticias/feed,MÉDIA - Marketing e conteúdo,Original
+Doutores da Web,doutoresdaweb.com.br,"Marketing, Publicidade Digital",Variável,https://doutoresdaweb.com.br/feed,BAIXA - Marketing digital,Original
+CITAS,citas.com.br,"Publicidade, Ranking, Agências",Variável,https://citas.com.br/feed,MÉDIA - Ranking e análise de agências,Original
+Numecompany,numecompany.com,"Marketing Digital, Agências",Variável,https://numecompany.com/feed,MÉDIA - Reviews de agências,Original
+Clutch.co,clutch.co,"Agências, Reviews, Ranking",Variável,https://clutch.co/feed,MÉDIA - Reviews de agências,Original
+TheManifest,themanifest.com,"Agências, Reviews, Comentários",Variável,https://themanifest.com/feed,MÉDIA - Reviews de agências,Original
+GoodFirms,goodfirms.co,"Agências, Reviews, Ranking",Variável,https://goodfirms.co/feed,MÉDIA - Reviews de agências,Original
+TechBehemoths,techbehemoths.com,"Agências, Reviews, Ranking",Variável,https://techbehemoths.com/feed,MÉDIA - Reviews de agências,Original
+Founderpal,founderpal.ai,"Agências, Startups, Ranking",Variável,https://founderpal.ai/feed,MÉDIA - Reviews de agências,Original
+Cenp-Meios,cenp.com.br,"Publicidade, Dados, Ranking",Variável,https://cenp.com.br/feed,MÉDIA - Dados e ranking de agências,Original
+Fernando Vasconcellos,fernandovasconcelos.com,"Publicidade, Consultoria",Variável,Verificar site,MÉDIA - Consultoria em publicidade,Original
+Google News,news.google.com,Geral (inclui publicidade),Contínua,https://news.google.com/rss,BAIXA - Publicidade em contexto geral,Original
+Portal Megabrasil,megabrasil.com.br,"Publicidade, Comunicação, Negócios",Diária,https://megabrasil.com.br/feed,MÉDIA - Publicidade e comunicação,Original
+LinkedIn Pulse,linkedin.com/pulse,Conteúdo Profissional,Contínua,https://linkedin.com/pulse/feed,BAIXA - Conteúdo profissional,Original
+Twitter/X #publicidade,twitter.com,Conteúdo em Tempo Real,Contínua,https://api.twitter.com/2/tweets/search,BAIXA - Menções em tempo real,Original
+Instagram #agencias,instagram.com,Conteúdo em Tempo Real,Contínua,https://api.instagram.com/feed,BAIXA - Menções em tempo real,Original
+Governo.br RSS,gov.br,Geral (governo),Variável,https://www.gov.br/rss,BAIXA - Geral (governo),Original
+Repórter Brasil RSS,reporterbrasil.org.br,Jornalismo Investigativo,Variável,http://reporterbrasil.org.br/categorias/noticias/feed/,MÉDIA - Jornalismo investigativo,Original
+Update or Die,updateordie.com,"Publicidade, Marketing, Criatividade, Tendências",Diária,https://updateordie.com/feed/,ALTA - Blog de referência em publicidade e criatividade,Novo
+Update or Die - Publicidade,updateordie.com,"Publicidade, Marketing, Campanhas",Diária,https://updateordie.com/category/publicidade/feed/,ALTA - Categoria específica de publicidade,Novo
+Exame,exame.com,"Negócios, Marketing, Publicidade, Economia",Contínua,https://exame.com/feed/,MÉDIA - Marketing em contexto empresarial,Novo
+Tecnoblog,tecnoblog.net,"Tecnologia, Marketing Digital",Diária,https://tecnoblog.net/feed/,BAIXA - Tecnologia com cobertura ocasional,Novo
+Mundo do Marketing,mundodomarketing.com.br,"Marketing, Publicidade, Comunicação",Diária,https://mundodomarketing.com.br/feed/,ALTA - Principal portal de marketing do Brasil,Novo
+Valor Econômico - Marketing,valor.globo.com,"Negócios, Marketing, Publicidade",Diária,https://valor.globo.com/empresas/marketing/,MÉDIA - Marketing e negócios,Novo
+Canaltech,canaltech.com.br,"Tecnologia, Publicidade Digital",Contínua,https://canaltech.com.br/rss/,BAIXA - Tecnologia com cobertura ocasional de publicidade,Novo
+B9,b9.com.br,"Criatividade, Inovação, Cultura Digital",Variável,https://www.b9.com.br/feed/,MÉDIA - Criatividade e inovação,Novo
+ABAP,abap.com.br,"Agências, Publicidade, Mercado Publicitário",Variável,https://www.abap.com.br/noticias/,ALTA - Associação oficial de agências,Novo
+Marcodigital,marcodigital.com.br,"Marketing Digital, Mídias Digitais",Variável,https://marcodigital.com.br/,MÉDIA - Marketing digital,Novo
+Agência Brasil (EBC),agenciabrasil.ebc.com.br,"Notícias Gerais, Governo, Economia",Contínua,https://agenciabrasil.ebc.com.br/rss/ultimasnoticias/feed.xml,BAIXA - Notícias gerais do governo,Novo
+Startupi,startupi.com.br,"Startups, Empreendedorismo, Inovação",Variável,https://startupi.com.br/,MÉDIA - Startups e inovação,Novo
+Mercado & Consumo,mercadoeconsumo.com.br,"Marketing, Consumo, Varejo",Diária,https://mercadoeconsumo.com.br/,MÉDIA - Marketing e consumo,Novo
+Portal Comunique-se,comunique-se.com.br,"Comunicação, Jornalismo, Publicidade",Diária,https://comunique-se.com.br/,MÉDIA - Comunicação corporativa,Novo
+Shots,shots.net,"Publicidade Internacional, Campanhas",Diária,https://shots.net/news/feed/,BAIXA - Publicidade internacional (inglês),Novo
+The Drum,thedrum.com,"Marketing, Publicidade, Mídia",Contínua,https://www.thedrum.com/rss/news/,BAIXA - Marketing internacional (inglês),Novo
+Adweek,adweek.com,"Publicidade, Marketing, Mídia",Contínua,https://www.adweek.com/feed/,BAIXA - Publicidade internacional (inglês),Novo
+Campaign Brasil,campaignbrasil.com.br,"Publicidade, Marketing, Criatividade",Semanal,https://campaignbrasil.com.br/,ALTA - Publicidade e criatividade,Novo
+Meio & Mensagem - Blogs,meioemensagem.com.br,"Publicidade, Mídia, Comunicação",Diária,https://meioemensagem.com.br/blogs/feed/,ALTA - Blogs especializados,Novo
+Propmark - Agências,propmark.com.br,"Publicidade, Marketing, Agências",Diária,https://propmark.com.br/agencias/feed/,ALTA - Categoria específica de agências,Novo

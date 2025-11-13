@@ -1,0 +1,33 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model RSSFeed {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique
+  url       String   @unique
+  createdAt DateTime @default(now())
+  
+  articles NewsArticle[]
+}
+
+model NewsArticle {
+  id              Int      @id @default(autoincrement())
+  title           String
+  link            String   @unique
+  summary         String?
+  publishedDate   DateTime
+  createdAt       DateTime @default(now())
+  
+  feed    RSSFeed @relation(fields: [feedId], references: [id])
+  feedId  Int
+  tags            String[] @default([]) // Novo campo para tags
+}
