@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import { startFeedUpdateScheduler } from '@/lib/cron-job';
-import { useEffect } from 'react'; // Importar useEffect
 
 // Iniciar o scheduler uma única vez no lado do servidor
 if (typeof window === 'undefined') { // Garante que roda apenas no servidor

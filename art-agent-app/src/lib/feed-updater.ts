@@ -13,6 +13,29 @@ type FeedItem = {
 // Instancia o parser
 const parser = new Parser<object, FeedItem>();
 
+// Palavras-chave para categorização inteligente
+const KEYWORDS = {
+  'Novos Clientes': ['conquista', 'nova conta', 'ganha conta', 'novo cliente', 'pitch'],
+  'Campanhas': ['campanha', 'lança', 'publicidade', 'filme', 'comercial', 'ação'],
+  'Prêmios': ['prêmio', 'vence', 'leão', 'award', 'festival', 'reconhecimento'],
+  'Movimentação de Talentos': ['contrata', 'chega para', 'deixa a agência', 'novo diretor', 'promove'],
+};
+
+function getTagsFromContent(title: string, summary: string | null | undefined): string[] {
+  const content = `${title} ${summary || ''}`.toLowerCase();
+  const tags: string[] = [];
+
+  for (const tag in KEYWORDS) {
+    for (const keyword of KEYWORDS[tag as keyof typeof KEYWORDS]) {
+      if (content.includes(keyword)) {
+        tags.push(tag);
+        break; // Adiciona a tag apenas uma vez por categoria
+      }
+    }
+  }
+  return tags;
+}
+
 export async function runFeedUpdate(): Promise<{ newArticlesCount: number; message: string }> {
   console.log('Iniciando a atualização de feeds...');
 
@@ -44,6 +67,8 @@ export async function runFeedUpdate(): Promise<{ newArticlesCount: number; messa
 
           // 2. Se não existir, cria o novo artigo
           if (!articleExists) {
+            const tags = getTagsFromContent(item.title, item.summary || item.content);
+            
             await prisma.newsArticle.create({
               data: {
                 title: item.title,
@@ -51,6 +76,7 @@ export async function runFeedUpdate(): Promise<{ newArticlesCount: number; messa
                 summary: item.summary || item.content || '',
                 publishedDate: new Date(item.pubDate),
                 feedId: feed.id,
+                tags: tags.length > 0 ? JSON.stringify(tags) : null, // Salva tags como JSON string
               },
             });
             newArticlesCount++;

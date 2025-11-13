@@ -29,5 +29,5 @@ model NewsArticle {
   
   feed    RSSFeed @relation(fields: [feedId], references: [id])
   feedId  Int
-  tags            String[] @default([]) // Novo campo para tags
+  tags            String? // Armazenar tags como uma string JSON
 }

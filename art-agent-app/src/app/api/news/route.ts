@@ -5,6 +5,7 @@ import { Prisma } from '@prisma/client';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period');
+  const tag = searchParams.get('tag'); // Novo parâmetro de filtro por tag
 
   let whereClause: Prisma.NewsArticleWhereInput = {};
 
@@ -44,6 +45,14 @@ export async function GET(request: Request) {
         gte: startDate,
       };
     }
+  }
+
+  if (tag) {
+    // Para buscar tags em um campo String que armazena JSON, usamos 'contains'
+    // A busca será por uma substring, então '["Minha Tag"]' conterá '"Minha Tag"'
+    whereClause.tags = {
+      contains: `"${tag}"`,
+    };
   }
 
   try {
