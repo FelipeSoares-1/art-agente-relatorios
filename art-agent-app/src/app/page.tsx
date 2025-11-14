@@ -19,16 +19,18 @@ type RSSFeed = {
   url: string;
 };
 
-const TAG_OPTIONS = [
-  'Novos Clientes',
-  'Campanhas',
-  'Prêmios',
-  'Movimentação de Talentos',
-];
+type TagCategory = {
+  id: number;
+  name: string;
+  keywords: string;
+  color: string;
+  enabled: boolean;
+};
 
 export default function Home() {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [feeds, setFeeds] = useState<RSSFeed[]>([]);
+  const [tagOptions, setTagOptions] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filterPeriod, setFilterPeriod] = useState<string | null>(null);
@@ -92,8 +94,25 @@ export default function Home() {
     }
   };
 
+  const fetchTagCategories = async () => {
+    try {
+      const response = await fetch('/api/tag-categories');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: TagCategory[] = await response.json();
+      const activeTagNames = data
+        .filter(cat => cat.enabled)
+        .map(cat => cat.name);
+      setTagOptions(activeTagNames);
+    } catch (e: unknown) {
+      console.error('Erro ao buscar categorias de tags:', e);
+    }
+  };
+
   useEffect(() => {
     fetchFeeds();
+    fetchTagCategories();
   }, []);
 
   useEffect(() => {
@@ -148,7 +167,7 @@ export default function Home() {
             >
               Todas as Tags
             </button>
-            {TAG_OPTIONS.map((tag) => (
+            {tagOptions.map((tag) => (
               <button
                 key={tag}
                 onClick={() => setFilterTag(tag)}

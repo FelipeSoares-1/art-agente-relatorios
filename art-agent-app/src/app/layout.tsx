@@ -46,6 +46,12 @@ export default function RootLayout({
               <Link href="/feeds" className="hover:text-gray-300">
                 Gerenciar Feeds
               </Link>
+              <Link href="/tags" className="hover:text-gray-300">
+                🏷️ Tags
+              </Link>
+              <Link href="/dashboard" className="hover:text-gray-300">
+                📊 Monitoramento
+              </Link>
             </div>
           </div>
         </nav>

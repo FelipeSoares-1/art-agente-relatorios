@@ -61,16 +61,6 @@ export async function GET(request: Request) {
     whereClause.feedId = parseInt(feedId, 10);
   }
 
-  if (search) {
-    // Busca em título, resumo e tags (case-insensitive através do toLowerCase)
-    const searchLower = search.toLowerCase();
-    whereClause.OR = [
-      { title: { contains: searchLower } },
-      { summary: { contains: searchLower } },
-      { tags: { contains: searchLower } },
-    ];
-  }
-
   try {
     const articles = await prisma.newsArticle.findMany({
       where: whereClause,
@@ -87,11 +77,21 @@ export async function GET(request: Request) {
     });
 
     // Mapear para incluir o nome do feed diretamente no objeto do artigo
-    const formattedArticles = articles.map(article => ({
+    let formattedArticles = articles.map(article => ({
       ...article,
       feedName: article.feed.name,
       feed: undefined, // Remover o objeto feed original
     }));
+
+    // Filtro de busca case-insensitive (aplicado após a query)
+    if (search) {
+      const searchLower = search.toLowerCase();
+      formattedArticles = formattedArticles.filter(article => 
+        article.title.toLowerCase().includes(searchLower) ||
+        (article.summary && article.summary.toLowerCase().includes(searchLower)) ||
+        (article.tags && article.tags.toLowerCase().includes(searchLower))
+      );
+    }
 
     return NextResponse.json(formattedArticles);
   } catch (error) {

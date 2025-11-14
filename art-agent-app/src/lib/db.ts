@@ -7,6 +7,7 @@ declare global {
 
 // Evita criar novas conexões a cada hot-reload em desenvolvimento
 export const prisma = global.prisma || new PrismaClient();
+export const db = prisma; // Alias para compatibilidade
 
 if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma;

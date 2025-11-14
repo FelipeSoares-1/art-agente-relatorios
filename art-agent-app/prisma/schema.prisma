@@ -31,3 +31,13 @@ model NewsArticle {
   feedId  Int
   tags            String? // Armazenar tags como uma string JSON
 }
+
+model TagCategory {
+  id        Int      @id @default(autoincrement())
+  name      String   @unique // Nome da tag (ex: "Novos Clientes", "Prêmios")
+  keywords  String   // JSON array de palavras-chave
+  color     String   @default("#3b82f6") // Cor em hex para UI
+  enabled   Boolean  @default(true) // Permite desativar temporariamente
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

@@ -1,12 +1,30 @@
 # Funcionalidades Futuras para o A.R.T.
 
-Aqui estão algumas sugestões de aprimoramentos e novas funcionalidades que poderíamos adicionar ao A.R.T. (Agente de Relatórios e Tendências) após a conclusão do MVP:
+Aqui estão as funcionalidades disponíveis para implementação no A.R.T. (Agente de Relatórios e Tendências):
 
-## 1. Palavras-chave e Tags Customizáveis
-*   **Descrição:** Atualmente, as palavras-chave usadas para identificar tags inteligentes (como "Novos Clientes", "Campanhas", "Prêmios") são fixas no código. Esta funcionalidade permitiria ao usuário definir e gerenciar suas próprias palavras-chave e as tags associadas diretamente pela interface web.
-*   **Benefício:** Maior flexibilidade e personalização para o usuário, adaptando o agente às suas necessidades específicas de monitoramento.
+## ✅ Implementadas
 
-## 2. Análise de Sentimento
+### 1. Palavras-chave e Tags Customizáveis ✅
+*   **Status:** IMPLEMENTADO
+*   **Descrição:** Sistema completo de gerenciamento de tags e palavras-chave via interface web.
+*   **Benefício:** Flexibilidade total para criar, editar e gerenciar categorias de tags.
+*   **Recursos:** Interface /tags, API REST, sistema automático de aplicação, botão de re-processamento.
+
+### 2. Funcionalidade de Busca ✅
+*   **Status:** IMPLEMENTADO
+*   **Descrição:** Barra de busca livre no dashboard.
+*   **Benefício:** Pesquisa rápida por qualquer termo em títulos e resumos.
+
+### 3. Filtro por Fonte ✅
+*   **Status:** IMPLEMENTADO
+*   **Descrição:** Dropdown com 73 feeds para filtrar notícias por fonte.
+*   **Benefício:** Controle granular sobre visualização das notícias.
+
+---
+
+## 🚀 Disponíveis para Implementação
+
+### 4. Busca Ativa por "Artplan" e Palavras-Chave Específicas ⭐⭐⭐⭐⭐
 *   **Descrição:** Integrar uma funcionalidade de Processamento de Linguagem Natural (PLN) para analisar o tom emocional das notícias (positivo, negativo, neutro).
 *   **Benefício:** Fornecer insights mais profundos sobre a percepção pública das agências e campanhas, ajudando a Artplan a entender o "humor" do mercado.
 

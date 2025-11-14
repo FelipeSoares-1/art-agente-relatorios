@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db';
 import Parser from 'rss-parser';
+import { identificarTags } from './tag-helper';
 
 // Tipagem para os itens do feed RSS
 type FeedItem = {
@@ -13,27 +14,9 @@ type FeedItem = {
 // Instancia o parser
 const parser = new Parser<object, FeedItem>();
 
-// Palavras-chave para categorização inteligente
-const KEYWORDS = {
-  'Novos Clientes': ['conquista', 'nova conta', 'ganha conta', 'novo cliente', 'pitch'],
-  'Campanhas': ['campanha', 'lança', 'publicidade', 'filme', 'comercial', 'ação'],
-  'Prêmios': ['prêmio', 'vence', 'leão', 'award', 'festival', 'reconhecimento'],
-  'Movimentação de Talentos': ['contrata', 'chega para', 'deixa a agência', 'novo diretor', 'promove'],
-};
-
-function getTagsFromContent(title: string, summary: string | null | undefined): string[] {
-  const content = `${title} ${summary || ''}`.toLowerCase();
-  const tags: string[] = [];
-
-  for (const tag in KEYWORDS) {
-    for (const keyword of KEYWORDS[tag as keyof typeof KEYWORDS]) {
-      if (content.includes(keyword)) {
-        tags.push(tag);
-        break; // Adiciona a tag apenas uma vez por categoria
-      }
-    }
-  }
-  return tags;
+async function getTagsFromContent(title: string, summary: string | null | undefined): Promise<string[]> {
+  const content = `${title} ${summary || ''}`;
+  return await identificarTags(content);
 }
 
 export async function runFeedUpdate(): Promise<{ newArticlesCount: number; message: string }> {
@@ -67,7 +50,7 @@ export async function runFeedUpdate(): Promise<{ newArticlesCount: number; messa
 
           // 2. Se não existir, cria o novo artigo
           if (!articleExists) {
-            const tags = getTagsFromContent(item.title, item.summary || item.content);
+            const tags = await getTagsFromContent(item.title, item.summary || item.content);
             
             await prisma.newsArticle.create({
               data: {
