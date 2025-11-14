@@ -5,9 +5,11 @@ import { Prisma } from '@prisma/client';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const period = searchParams.get('period');
-  const tag = searchParams.get('tag'); // Novo parâmetro de filtro por tag
+  const tag = searchParams.get('tag');
+  const feedId = searchParams.get('feedId');
+  const search = searchParams.get('search');
 
-  let whereClause: Prisma.NewsArticleWhereInput = {};
+  const whereClause: Prisma.NewsArticleWhereInput = {};
 
   if (period) {
     const now = new Date();
@@ -53,6 +55,20 @@ export async function GET(request: Request) {
     whereClause.tags = {
       contains: `"${tag}"`,
     };
+  }
+
+  if (feedId) {
+    whereClause.feedId = parseInt(feedId, 10);
+  }
+
+  if (search) {
+    // Busca em título, resumo e tags (case-insensitive através do toLowerCase)
+    const searchLower = search.toLowerCase();
+    whereClause.OR = [
+      { title: { contains: searchLower } },
+      { summary: { contains: searchLower } },
+      { tags: { contains: searchLower } },
+    ];
   }
 
   try {

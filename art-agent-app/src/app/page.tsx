@@ -9,7 +9,14 @@ type NewsArticle = {
   summary: string;
   publishedDate: string; // ISO string
   feedName: string;
+  feedId: number;
   tags?: string; // Tags are stored as a JSON string
+};
+
+type RSSFeed = {
+  id: number;
+  name: string;
+  url: string;
 };
 
 const TAG_OPTIONS = [
@@ -21,12 +28,21 @@ const TAG_OPTIONS = [
 
 export default function Home() {
   const [news, setNews] = useState<NewsArticle[]>([]);
+  const [feeds, setFeeds] = useState<RSSFeed[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [filterPeriod, setFilterPeriod] = useState<string | null>(null);
   const [filterTag, setFilterTag] = useState<string | null>(null);
+  const [filterFeedId, setFilterFeedId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchInput, setSearchInput] = useState<string>('');
 
-  const fetchNews = async (period: string | null = null, tag: string | null = null) => {
+  const fetchNews = async (
+    period: string | null = null,
+    tag: string | null = null,
+    feedId: string | null = null,
+    search: string = ''
+  ) => {
     setLoading(true);
     setError(null);
     try {
@@ -38,6 +54,12 @@ export default function Home() {
       if (tag) {
         params.append('tag', tag);
       }
+      if (feedId) {
+        params.append('feedId', feedId);
+      }
+      if (search) {
+        params.append('search', search);
+      }
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
@@ -48,17 +70,35 @@ export default function Home() {
       }
       const data: NewsArticle[] = await response.json();
       setNews(data);
-    } catch (e: any) {
-      setError(`Falha ao carregar notícias: ${e.message}`);
+    } catch (e: unknown) {
+      const errorMessage = e instanceof Error ? e.message : 'Erro desconhecido';
+      setError(`Falha ao carregar notícias: ${errorMessage}`);
       console.error('Erro ao buscar notícias:', e);
     } finally {
       setLoading(false);
     }
   };
 
+  const fetchFeeds = async () => {
+    try {
+      const response = await fetch('/api/feeds');
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data: RSSFeed[] = await response.json();
+      setFeeds(data);
+    } catch (e: unknown) {
+      console.error('Erro ao buscar feeds:', e);
+    }
+  };
+
   useEffect(() => {
-    fetchNews(filterPeriod, filterTag);
-  }, [filterPeriod, filterTag]);
+    fetchFeeds();
+  }, []);
+
+  useEffect(() => {
+    fetchNews(filterPeriod, filterTag, filterFeedId, searchTerm);
+  }, [filterPeriod, filterTag, filterFeedId, searchTerm]);
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
@@ -101,7 +141,7 @@ export default function Home() {
           </div>
 
           {/* Filtros de Tags */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             <button
               onClick={() => setFilterTag(null)}
               className={`px-4 py-2 rounded-md text-sm font-medium ${!filterTag ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
@@ -117,6 +157,59 @@ export default function Home() {
                 {tag}
               </button>
             ))}
+          </div>
+
+          {/* Filtro por Fonte */}
+          <div className="mb-4">
+            <label htmlFor="feedFilter" className="block text-sm font-medium mb-2">
+              Filtrar por Fonte:
+            </label>
+            <select
+              id="feedFilter"
+              value={filterFeedId || ''}
+              onChange={(e) => setFilterFeedId(e.target.value || null)}
+              className="px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todas as Fontes</option>
+              {feeds.map((feed) => (
+                <option key={feed.id} value={feed.id.toString()}>
+                  {feed.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Barra de Busca */}
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Buscar notícias por título, resumo ou tags..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setSearchTerm(searchInput);
+                }
+              }}
+              className="flex-1 px-4 py-2 rounded-md bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500"
+            />
+            <button
+              onClick={() => setSearchTerm(searchInput)}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 font-medium"
+            >
+              Buscar
+            </button>
+            {searchTerm && (
+              <button
+                onClick={() => {
+                  setSearchInput('');
+                  setSearchTerm('');
+                }}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 font-medium"
+              >
+                Limpar
+              </button>
+            )}
           </div>
         </div>
       </header>
