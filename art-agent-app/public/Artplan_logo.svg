@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 80">
+  <!-- Red background -->
+  <rect width="200" height="80" fill="#dc2626" rx="4"/>
+  
+  <!-- White "A.R.T" text -->
+  <text x="100" y="55" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">
+    A.R.T
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="100" y="75" font-family="Arial, sans-serif" font-size="10" fill="white" text-anchor="middle">
+    ARTPLAN
+  </text>
+</svg>

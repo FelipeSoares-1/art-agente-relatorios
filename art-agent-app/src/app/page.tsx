@@ -1,7 +1,6 @@
 ﻿'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 
 type NewsArticle = {
   id: number;
@@ -35,13 +34,6 @@ const periodOptions: { label: string; value: string | null }[] = [
   { label: 'Últimos 7 dias', value: '7d' },
   { label: 'Últimos 15 dias', value: '15d' },
 ];
-
-const tagChipClasses = (active: boolean) =>
-  `whitespace-nowrap rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-    active
-      ? 'border-blue-500 bg-blue-500 text-white shadow'
-      : 'border-slate-200 bg-white text-slate-600 hover:border-blue-200 hover:text-blue-500'
-  }`;
 
 const parseTags = (raw?: string | null): string[] => {
   if (!raw) return [];
@@ -177,122 +169,71 @@ export default function Home() {
   }, [news]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <img src="/Artplan_logo.png" alt="Artplan" className="h-7 w-auto" />
-            <span className="text-sm font-semibold text-slate-700">Radar de Notícias</span>
-          </div>
-          <nav className="flex items-center gap-6 text-sm text-slate-600">
-            <a href="#feeds" className="hover:text-blue-600 transition font-medium">Fontes</a>
-            <a href="#tags" className="hover:text-blue-600 transition font-medium">Tags</a>
-          </nav>
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-7xl px-6 py-10">
-        <header className="mb-12 grid gap-8 lg:grid-cols-[2fr,1fr]">
-          <section className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
-            <div className="space-y-6">
-              <div>
-                <p className="mb-2 inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">📊 INTELIGÊNCIA DE MERCADO</p>
-                <h1 className="mt-3 text-4xl font-bold text-slate-900 leading-tight">
-                  Monitoramento de notícias em tempo real
-                </h1>
-                <p className="mt-4 text-lg text-slate-600">
-                  Acompanhe tendências, concorrentes e oportunidades do mercado de publicidade e marketing com dados consolidados.
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <div className="rounded-xl border border-blue-200 bg-blue-50 p-5">
-                  <p className="text-sm font-semibold text-blue-700">Artigos</p>
-                  <p className="mt-2 text-3xl font-bold text-blue-900">{summary.totalArticles}</p>
-                  <p className="text-xs text-blue-600 mt-1">Nos filtros atuais</p>
-                </div>
-                <div className="rounded-xl border border-purple-200 bg-purple-50 p-5">
-                  <p className="text-sm font-semibold text-purple-700">Fontes</p>
-                  <p className="mt-2 text-3xl font-bold text-purple-900">{summary.uniqueFeeds}</p>
-                  <p className="text-xs text-purple-600 mt-1">Origem dos dados</p>
-                </div>
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-5">
-                  <p className="text-sm font-semibold text-emerald-700">Tags</p>
-                  <p className="mt-2 text-3xl font-bold text-emerald-900">{summary.uniqueTags}</p>
-                  <p className="text-xs text-emerald-600 mt-1">Contextos</p>
-                </div>
-                <div className="rounded-xl border border-orange-200 bg-orange-50 p-5">
-                  <p className="text-sm font-semibold text-orange-700">Atualizado</p>
-                  <p className="mt-2 text-2xl font-bold text-orange-900">
-                    {summary.lastPublished
-                      ? summary.lastPublished.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                      : '—'}
-                  </p>
-                  <p className="text-xs text-orange-600 mt-1">Agora</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <aside className="space-y-4 lg:space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="text-2xl">🎯</span>
-                <h3 className="font-bold text-slate-900">Cobertura</h3>
-              </div>
-              <p className="text-sm text-slate-600 mb-5">
-                Monitora <span className="font-semibold">{feeds.length} fontes</span> de publicidade e marketing.
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-6 py-8">
+        {/* Hero Section */}
+        <section className="mb-12 bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-8 text-white shadow-lg">
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h2 className="text-4xl font-bold mb-4">Monitoramento Inteligente</h2>
+              <p className="text-red-100 text-lg leading-relaxed mb-6">
+                Acompanhe em tempo real as principais tendências, concorrentes e oportunidades do mercado de publicidade e marketing.
               </p>
-              <div className="space-y-3">
-                <p className="text-xs font-semibold uppercase text-slate-500 tracking-wide">Principais</p>
-                <ul className="space-y-2">
-                  {topSources.length > 0 ? (
-                    topSources.map(source => (
-                      <li key={source} className="text-sm text-slate-700 flex items-center gap-2">
-                        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-                        {source}
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-sm text-slate-500 italic">Carregando...</li>
-                  )}
-                </ul>
+              <div className="flex gap-4">
+                <a href="/feeds" className="bg-white text-red-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+                  Gerenciar Fontes
+                </a>
+                <a href="/dashboard" className="border-2 border-white text-white px-6 py-3 rounded-lg font-semibold hover:bg-red-800 transition">
+                  Ver Relatórios
+                </a>
               </div>
             </div>
-
-            <div className="rounded-2xl border border-blue-300 bg-blue-600 p-6 text-white transition hover:bg-blue-700 cursor-pointer">
-              <p className="text-xs font-semibold uppercase tracking-wider text-blue-200">Gerenciar</p>
-              <h3 className="mt-2 text-lg font-bold">Suas Fontes</h3>
-              <p className="mt-2 text-sm text-blue-100">Configure feeds RSS e novas fontes</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-300 bg-slate-800 p-6 text-white transition hover:bg-slate-900 cursor-pointer">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Insights</p>
-              <h3 className="mt-2 text-lg font-bold">Ver Histórico</h3>
-              <p className="mt-2 text-sm text-slate-300">Acesse análises e relatórios</p>
-            </div>
-          </aside>
-        </header>
-
-        <main className="grid gap-8 lg:grid-cols-[2fr,1fr]">
-          <section className="space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">🔍 Refine sua Busca</h3>
-                  <p className="text-sm text-slate-500">Filtros por período, tags, fonte ou palavras</p>
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <p className="text-3xl font-bold">{summary.totalArticles}</p>
+                <p className="text-red-100 text-sm mt-2">Artigos Coletados</p>
               </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <p className="text-3xl font-bold">{summary.uniqueFeeds}</p>
+                <p className="text-red-100 text-sm mt-2">Fontes Ativas</p>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <p className="text-3xl font-bold">{summary.uniqueTags}</p>
+                <p className="text-red-100 text-sm mt-2">Tags Identificadas</p>
+              </div>
+              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <p className="text-lg font-bold">
+                  {summary.lastPublished
+                    ? summary.lastPublished.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                    : '—'}
+                </p>
+                <p className="text-red-100 text-sm mt-2">Última Atualização</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Main Content */}
+        <div className="grid lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2 space-y-6">
+            {/* Filters */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-600">
+              <h3 className="text-xl font-bold text-gray-800 mb-6">🔍 Refinar Busca</h3>
 
               <div className="space-y-6">
+                {/* Period Filter */}
                 <div>
-                  <p className="mb-3 text-sm font-semibold text-slate-700">Período</p>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Período</label>
                   <div className="flex flex-wrap gap-2">
                     {periodOptions.map(option => (
                       <button
                         key={option.label}
                         onClick={() => setFilterPeriod(option.value)}
-                        className={tagChipClasses(filterPeriod === option.value)}
+                        className={`px-4 py-2 rounded-full font-medium transition ${
+                          filterPeriod === option.value
+                            ? 'bg-red-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600'
+                        }`}
                       >
                         {option.label}
                       </button>
@@ -300,12 +241,17 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Tags Filter */}
                 <div>
-                  <p className="mb-3 text-sm font-semibold text-slate-700">Tags</p>
-                  <div className="flex gap-2 overflow-x-auto pb-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">Tags</label>
+                  <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => setFilterTag(null)}
-                      className={tagChipClasses(!filterTag)}
+                      className={`px-4 py-2 rounded-full font-medium transition ${
+                        !filterTag
+                          ? 'bg-red-600 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600'
+                      }`}
                     >
                       Todas
                     </button>
@@ -313,7 +259,11 @@ export default function Home() {
                       <button
                         key={tag}
                         onClick={() => setFilterTag(tag)}
-                        className={tagChipClasses(filterTag === tag)}
+                        className={`px-4 py-2 rounded-full font-medium transition ${
+                          filterTag === tag
+                            ? 'bg-red-600 text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-red-50 hover:text-red-600'
+                        }`}
                       >
                         {tag}
                       </button>
@@ -321,9 +271,10 @@ export default function Home() {
                   </div>
                 </div>
 
-                <div className="grid gap-4 lg:grid-cols-[1fr,200px]">
+                {/* Search & Source */}
+                <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <p className="mb-3 text-sm font-semibold text-slate-700">Busca</p>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Buscar</label>
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -333,24 +284,24 @@ export default function Home() {
                           if (e.key === 'Enter') setSearchTerm(searchInput);
                         }}
                         placeholder="Palavras-chave..."
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 placeholder:text-slate-400 focus:border-blue-400 focus:outline-none"
+                        className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none"
                       />
                       <button
                         onClick={() => setSearchTerm(searchInput)}
-                        className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700"
+                        className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold transition"
                       >
                         🔍
                       </button>
                     </div>
                   </div>
                   <div>
-                    <p className="mb-3 text-sm font-semibold text-slate-700">Fonte</p>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Fonte</label>
                     <select
                       value={filterFeedId || ''}
                       onChange={(e) => setFilterFeedId(e.target.value || null)}
-                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:border-blue-400"
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none"
                     >
-                      <option value="">Todas</option>
+                      <option value="">Todas as fontes</option>
                       {feeds.map(feed => (
                         <option key={feed.id} value={feed.id.toString()}>
                           {feed.name}
@@ -362,27 +313,30 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="space-y-4">
+            {/* Articles List */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-600">
+              <h3 className="text-xl font-bold text-gray-800 mb-6">📰 Últimas Notícias</h3>
+
               {loading && (
-                <div className="rounded-2xl border-2 border-dashed border-blue-200 bg-blue-50 p-8 text-center">
-                  <p className="text-sm text-blue-600 font-medium">⏳ Carregando...</p>
+                <div className="text-center py-12">
+                  <p className="text-gray-500">⏳ Carregando notícias...</p>
                 </div>
               )}
 
               {error && (
-                <div className="rounded-2xl border border-red-300 bg-red-50 p-6 text-center">
-                  <p className="text-sm font-medium text-red-700">⚠️ {error}</p>
+                <div className="bg-red-50 border-l-4 border-red-600 p-4 mb-4 rounded">
+                  <p className="text-red-700">⚠️ {error}</p>
                 </div>
               )}
 
               {!loading && !error && news.length === 0 && (
-                <div className="rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 p-8 text-center">
-                  <p className="text-sm text-slate-500">Nenhuma notícia encontrada.</p>
+                <div className="text-center py-12">
+                  <p className="text-gray-500">Nenhuma notícia encontrada para estes filtros.</p>
                 </div>
               )}
 
               {!loading && !error && news.length > 0 && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {news.map(article => {
                     const tags = parseTags(article.tags);
                     return (
@@ -391,29 +345,31 @@ export default function Home() {
                         href={article.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="group block rounded-xl border border-slate-200 bg-white p-5 transition hover:border-blue-300 hover:shadow-md"
+                        className="block p-4 border-2 border-gray-200 rounded-lg hover:border-red-300 hover:shadow-md transition group"
                       >
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <h3 className="text-base font-semibold text-slate-900 group-hover:text-blue-600 line-clamp-2">
+                        <div className="flex justify-between items-start gap-4 mb-2">
+                          <h4 className="font-bold text-gray-800 group-hover:text-red-600 transition line-clamp-2">
                             {article.title}
-                          </h3>
-                          <time className="text-xs text-slate-500 whitespace-nowrap">
-                            {new Date(article.publishedDate).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
-                          </time>
+                          </h4>
+                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                            {new Date(article.publishedDate).toLocaleDateString('pt-BR')}
+                          </span>
                         </div>
-                        <p className="text-sm text-slate-600 line-clamp-2 mb-3">{article.summary}</p>
+                        <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          <span className="text-xs font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full">
                             {article.feedName}
                           </span>
                           {tags.length > 0 && (
-                            <div className="flex gap-1">
+                            <div className="flex gap-1 flex-wrap justify-end">
                               {tags.slice(0, 2).map(tag => (
-                                <span key={tag} className="text-xs text-slate-600 bg-slate-100 px-2 py-1 rounded">
+                                <span key={tag} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
                                   #{tag}
                                 </span>
                               ))}
-                              {tags.length > 2 && <span className="text-xs text-slate-500">+{tags.length - 2}</span>}
+                              {tags.length > 2 && (
+                                <span className="text-xs text-gray-500">+{tags.length - 2}</span>
+                              )}
                             </div>
                           )}
                         </div>
@@ -423,41 +379,69 @@ export default function Home() {
                 </div>
               )}
             </div>
-          </section>
+          </div>
 
+          {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h3 className="text-sm font-bold uppercase text-slate-700 tracking-wide mb-4">📈 Resumo</h3>
-              <ul className="space-y-3 text-sm text-slate-600">
-                <li className="flex items-start gap-2">
-                  <span className="text-blue-500 mt-1">•</span>
-                  <span><span className="font-semibold">{summary.totalArticles}</span> artigos</span>
+            {/* Stats Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-600">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">📈 Resumo</h3>
+              <ul className="space-y-3 text-sm text-gray-700">
+                <li className="flex justify-between">
+                  <span>Artigos totais:</span>
+                  <span className="font-bold text-red-600">{summary.totalArticles}</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-purple-500 mt-1">•</span>
-                  <span><span className="font-semibold">{summary.uniqueFeeds}</span> fontes</span>
+                <li className="flex justify-between">
+                  <span>Fontes monitoradas:</span>
+                  <span className="font-bold text-red-600">{summary.uniqueFeeds}</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-500 mt-1">•</span>
-                  <span><span className="font-semibold">{summary.uniqueTags}</span> tags</span>
+                <li className="flex justify-between">
+                  <span>Tags identificadas:</span>
+                  <span className="font-bold text-red-600">{summary.uniqueTags}</span>
                 </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-orange-500 mt-1">•</span>
-                  <span>Última às <span className="font-semibold">{summary.lastPublished ? summary.lastPublished.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '—'}</span></span>
+                <li className="flex justify-between pt-3 border-t-2 border-gray-200">
+                  <span>Última coleta:</span>
+                  <span className="font-bold text-red-600">
+                    {summary.lastPublished
+                      ? summary.lastPublished.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                      : '—'}
+                  </span>
                 </li>
               </ul>
             </div>
 
-            <div className="rounded-2xl border border-slate-300 bg-slate-800 p-6 text-white shadow-sm">
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">🎯 Roadmap</p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-300">
-                <li>✓ Análise de sentimento</li>
-                <li>✓ Alertas por email</li>
-                <li>✓ Integração CRM</li>
-              </ul>
+            {/* Sources Card */}
+            <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-red-600">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">📡 Principais Fontes</h3>
+              {topSources.length > 0 ? (
+                <ul className="space-y-2">
+                  {topSources.map(source => (
+                    <li key={source} className="text-sm text-gray-700 flex items-center gap-2">
+                      <span className="w-2 h-2 bg-red-600 rounded-full"></span>
+                      {source}
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-gray-500 italic">Carregando...</p>
+              )}
+            </div>
+
+            {/* CTA Card */}
+            <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-xl shadow-md p-6 text-white">
+              <h3 className="text-lg font-bold mb-2">⚙️ Gerenciar</h3>
+              <p className="text-red-100 text-sm mb-4">Configure suas fontes e categorias de tags</p>
+              <div className="space-y-2">
+                <a href="/feeds" className="block w-full bg-white text-red-600 py-2 rounded-lg text-center font-semibold hover:bg-gray-100 transition">
+                  Fontes RSS
+                </a>
+                <a href="/tags" className="block w-full bg-white bg-opacity-20 text-white py-2 rounded-lg text-center font-semibold hover:bg-opacity-30 transition">
+                  Categorias
+                </a>
+              </div>
             </div>
           </aside>
-        </main>
+        </div>
       </div>
     </div>
   );

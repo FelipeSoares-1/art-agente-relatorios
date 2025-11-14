@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect } from 'react';
 
@@ -66,7 +66,7 @@ export default function FeedsPage() {
 
       setNewFeedName('');
       setNewFeedUrl('');
-      fetchFeeds(); // Recarrega a lista de feeds
+      fetchFeeds();
     } catch (e: any) {
       setAddFeedError(`Falha ao adicionar feed: ${e.message}`);
       console.error('Erro ao adicionar feed:', e);
@@ -94,7 +94,7 @@ export default function FeedsPage() {
         throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
       }
 
-      fetchFeeds(); // Recarrega a lista de feeds
+      fetchFeeds();
     } catch (e: any) {
       alert(`Erro ao remover feed: ${e.message}`);
       console.error('Erro ao remover feed:', e);
@@ -102,78 +102,134 @@ export default function FeedsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4">
-      <div className="container mx-auto">
-        <h1 className="text-3xl font-bold mb-6">Gerenciamento de Feeds RSS</h1>
-
-        {/* Formulário para Adicionar Novo Feed */}
-        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6 mb-8">
-          <h2 className="text-2xl font-semibold mb-4">Adicionar Novo Feed</h2>
-          <form onSubmit={handleAddFeed} className="space-y-4">
-            <div>
-              <label htmlFor="feedName" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                Nome do Feed
-              </label>
-              <input
-                type="text"
-                id="feedName"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={newFeedName}
-                onChange={(e) => setNewFeedName(e.target.value)}
-                disabled={addFeedLoading}
-              />
-            </div>
-            <div>
-              <label htmlFor="feedUrl" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                URL do RSS
-              </label>
-              <input
-                type="url"
-                id="feedUrl"
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                value={newFeedUrl}
-                onChange={(e) => setNewFeedUrl(e.target.value)}
-                disabled={addFeedLoading}
-              />
-            </div>
-            {addFeedError && <p className="text-red-500 text-sm">{addFeedError}</p>}
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
-              disabled={addFeedLoading}
-            >
-              {addFeedLoading ? 'Adicionando...' : 'Adicionar Feed'}
-            </button>
-          </form>
+    <div className="min-h-screen bg-gray-50">
+      <div className="mx-auto max-w-7xl px-6 py-8">
+        {/* Page Title */}
+        <div className="mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-2">📰 Gerenciar Fontes RSS</h2>
+          <p className="text-gray-600 text-lg">Adicione, remova ou atualize as fontes de notícias monitoradas</p>
         </div>
 
-        {/* Lista de Feeds Existentes */}
-        <div className="bg-white dark:bg-gray-800 shadow-md rounded-lg p-6">
-          <h2 className="text-2xl font-semibold mb-4">Feeds Cadastrados</h2>
-          {loading && <p>Carregando feeds...</p>}
-          {error && <p className="text-red-500">{error}</p>}
-          {!loading && feeds.length === 0 && !error && <p>Nenhum feed cadastrado ainda.</p>}
-          
-          {!loading && feeds.length > 0 && (
-            <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-              {feeds.map((feed) => (
-                <li key={feed.id} className="py-4 flex justify-between items-center">
-                  <div>
-                    <p className="text-lg font-medium">{feed.name}</p>
-                    <a href={feed.url} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:underline text-sm">
-                      {feed.url}
-                    </a>
+        <div className="grid lg:grid-cols-3 gap-8">
+          {/* Form */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-xl shadow-md border-l-4 border-red-600 p-6 sticky top-24">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">➕ Adicionar Fonte</h3>
+              <form onSubmit={handleAddFeed} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Nome da Fonte
+                  </label>
+                  <input
+                    type="text"
+                    value={newFeedName}
+                    onChange={(e) => setNewFeedName(e.target.value)}
+                    disabled={addFeedLoading}
+                    placeholder="Ex: Propmark"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none disabled:bg-gray-50"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    URL do Feed RSS
+                  </label>
+                  <input
+                    type="url"
+                    value={newFeedUrl}
+                    onChange={(e) => setNewFeedUrl(e.target.value)}
+                    disabled={addFeedLoading}
+                    placeholder="https://exemplo.com/feed"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none disabled:bg-gray-50"
+                  />
+                </div>
+                {addFeedError && (
+                  <div className="p-3 bg-red-50 border-l-4 border-red-600 rounded">
+                    <p className="text-sm text-red-700">⚠️ {addFeedError}</p>
                   </div>
-                  <button
-                    onClick={() => handleDeleteFeed(feed.id)}
-                    className="px-3 py-1 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 text-sm"
-                  >
-                    Remover
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
+                )}
+                <button
+                  type="submit"
+                  disabled={addFeedLoading}
+                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg transition disabled:opacity-50"
+                >
+                  {addFeedLoading ? '⏳ Adicionando...' : '✅ Adicionar Fonte'}
+                </button>
+              </form>
+            </div>
+          </div>
+
+          {/* Feeds List */}
+          <div className="lg:col-span-2">
+            <div className="bg-white rounded-xl shadow-md border-l-4 border-red-600 p-6">
+              <h3 className="text-2xl font-bold text-gray-900 mb-6">📋 Fontes Cadastradas ({feeds.length})</h3>
+
+              {loading && (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-4 border-red-600 mx-auto"></div>
+                  <p className="mt-4 text-gray-600">Carregando fontes...</p>
+                </div>
+              )}
+
+              {error && (
+                <div className="p-4 bg-red-50 border-l-4 border-red-600 rounded mb-4">
+                  <p className="text-red-700">❌ {error}</p>
+                </div>
+              )}
+
+              {!loading && feeds.length === 0 && !error && (
+                <div className="text-center py-12">
+                  <p className="text-gray-600 text-lg">Nenhuma fonte cadastrada ainda.</p>
+                  <p className="text-gray-500">Use o formulário ao lado para adicionar uma nova fonte.</p>
+                </div>
+              )}
+
+              {!loading && feeds.length > 0 && (
+                <div className="space-y-4">
+                  {feeds.map((feed) => (
+                    <div
+                      key={feed.id}
+                      className="p-5 border-2 border-gray-200 rounded-lg hover:border-red-300 hover:shadow-md transition group"
+                    >
+                      <div className="flex justify-between items-start gap-4 mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-lg text-gray-900 group-hover:text-red-600 transition">
+                            {feed.name}
+                          </h4>
+                          <a
+                            href={feed.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-blue-600 hover:underline break-all"
+                          >
+                            {feed.url}
+                          </a>
+                        </div>
+                        <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
+                          ID: {feed.id}
+                        </span>
+                      </div>
+                      <div className="flex gap-3">
+                        <a
+                          href={feed.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 bg-blue-50 hover:bg-blue-100 text-blue-700 py-2 px-3 rounded-lg text-sm font-medium transition text-center"
+                        >
+                          🔗 Visitar
+                        </a>
+                        <button
+                          onClick={() => handleDeleteFeed(feed.id)}
+                          className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 py-2 px-3 rounded-lg text-sm font-medium transition"
+                        >
+                          🗑️ Remover
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
