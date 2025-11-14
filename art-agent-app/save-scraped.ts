@@ -11,6 +11,21 @@ async function salvarArtigos() {
     meioMensagem: { coletados: 0, salvos: 0, duplicados: 0 },
   };
   
+  // Garantir que os feeds existem
+  let propmarkFeed = await prisma.rSSFeed.findUnique({ where: { name: 'Propmark' } });
+  if (!propmarkFeed) {
+    propmarkFeed = await prisma.rSSFeed.create({
+      data: { name: 'Propmark', url: 'https://www.propmark.com.br' },
+    });
+  }
+  
+  let meioMensagemFeed = await prisma.rSSFeed.findUnique({ where: { name: 'Meio & Mensagem' } });
+  if (!meioMensagemFeed) {
+    meioMensagemFeed = await prisma.rSSFeed.create({
+      data: { name: 'Meio & Mensagem', url: 'https://www.meioemenasagem.com.br' },
+    });
+  }
+  
   // Propmark
   console.log('1. Processando Propmark...');
   const propmarkArticles = await scrapePropmark(startDate, 5);
@@ -25,6 +40,7 @@ async function salvarArtigos() {
           summary: article.summary,
           publishedDate: article.publishedDate,
           tags: JSON.stringify([]),
+          feedId: propmarkFeed.id,
         },
       });
       stats.propmark.salvos++;
@@ -49,6 +65,7 @@ async function salvarArtigos() {
           summary: article.summary,
           publishedDate: article.publishedDate,
           tags: JSON.stringify([]),
+          feedId: meioMensagemFeed.id,
         },
       });
       stats.meioMensagem.salvos++;

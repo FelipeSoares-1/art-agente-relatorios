@@ -10,6 +10,28 @@ export async function POST(request: Request) {
     const priorities = body.priorities || ['ALTA', 'MÉDIA', 'BAIXA'];
     const useSpecificScrapers = body.useSpecificScrapers || false;
     
+    // Garantir que os feeds existem
+    let propmarkFeed = await db.rSSFeed.findUnique({ where: { name: 'Propmark' } });
+    if (!propmarkFeed) {
+      propmarkFeed = await db.rSSFeed.create({
+        data: { name: 'Propmark', url: 'https://www.propmark.com.br' },
+      });
+    }
+    
+    let meioMensagemFeed = await db.rSSFeed.findUnique({ where: { name: 'Meio & Mensagem' } });
+    if (!meioMensagemFeed) {
+      meioMensagemFeed = await db.rSSFeed.create({
+        data: { name: 'Meio & Mensagem', url: 'https://www.meioemenasagem.com.br' },
+      });
+    }
+    
+    let adnewsFeed = await db.rSSFeed.findUnique({ where: { name: 'AdNews' } });
+    if (!adnewsFeed) {
+      adnewsFeed = await db.rSSFeed.create({
+        data: { name: 'AdNews', url: 'https://www.adnews.com.br' },
+      });
+    }
+    
     // Se useSpecificScrapers = true, usa scrapers otimizados para sites críticos
     if (useSpecificScrapers) {
       console.log('🚀 Usando scrapers específicos otimizados (Propmark, M&M, AdNews)...');
@@ -31,7 +53,7 @@ export async function POST(request: Request) {
               link: article.link,
               summary: article.summary,
               publishedDate: article.publishedDate,
-              feedId: null,
+              feedId: propmarkFeed.id,
               tags: JSON.stringify([]),
             },
           });
@@ -52,7 +74,7 @@ export async function POST(request: Request) {
               link: article.link,
               summary: article.summary,
               publishedDate: article.publishedDate,
-              feedId: null,
+              feedId: meioMensagemFeed.id,
               tags: JSON.stringify([]),
             },
           });
@@ -73,7 +95,7 @@ export async function POST(request: Request) {
               link: article.link,
               summary: article.summary,
               publishedDate: article.publishedDate,
-              feedId: null,
+              feedId: adnewsFeed.id,
               tags: JSON.stringify([]),
             },
           });
