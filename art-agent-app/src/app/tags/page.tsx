@@ -81,13 +81,30 @@ export default function TagsPage() {
   };
 
   const handleEdit = (category: TagCategory) => {
+    // Converter keywords para string limpa
+    let keywordsString = '';
+    
+    if (Array.isArray(category.keywords)) {
+      // Se já é array, apenas junta com vírgula
+      keywordsString = category.keywords.join(', ');
+    } else if (typeof category.keywords === 'string') {
+      try {
+        // Se é string, tenta parsear como JSON
+        const parsed = JSON.parse(category.keywords);
+        if (Array.isArray(parsed)) {
+          keywordsString = parsed.join(', ');
+        } else {
+          keywordsString = category.keywords;
+        }
+      } catch {
+        // Se falhar o parse, usa a string diretamente
+        keywordsString = category.keywords;
+      }
+    }
+
     setFormData({
       name: category.name,
-      keywords: Array.isArray(category.keywords)
-        ? category.keywords.join(', ')
-        : typeof category.keywords === 'string'
-        ? category.keywords
-        : '',
+      keywords: keywordsString,
       color: category.color,
       enabled: category.enabled
     });
@@ -144,7 +161,7 @@ export default function TagsPage() {
                       value={formData.name}
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       placeholder="Ex: Tecnologia"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none text-gray-900 placeholder:text-gray-600 font-medium"
                       required
                     />
                   </div>
@@ -157,7 +174,7 @@ export default function TagsPage() {
                       value={formData.keywords}
                       onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
                       placeholder="tech, inteligência artificial, startup..."
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none h-24"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none h-24 text-gray-900 placeholder:text-gray-600 font-medium"
                       required
                     />
                   </div>
@@ -177,7 +194,7 @@ export default function TagsPage() {
                         type="text"
                         value={formData.color}
                         onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none text-sm"
+                        className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none text-sm text-gray-900 font-medium"
                       />
                     </div>
                   </div>
@@ -246,11 +263,26 @@ export default function TagsPage() {
               {!loading && categories.length > 0 && (
                 <div className="space-y-4">
                   {categories.map((category) => {
-                    const keywordsList: string[] = Array.isArray(category.keywords)
-                      ? category.keywords
-                      : typeof category.keywords === 'string'
-                      ? category.keywords.split(',').map((k: string) => k.trim())
-                      : [];
+                    // Processar keywords de forma mais robusta
+                    let keywordsList: string[] = [];
+                    
+                    if (Array.isArray(category.keywords)) {
+                      keywordsList = category.keywords;
+                    } else if (typeof category.keywords === 'string') {
+                      try {
+                        // Tenta parsear como JSON primeiro
+                        const parsed = JSON.parse(category.keywords);
+                        if (Array.isArray(parsed)) {
+                          keywordsList = parsed;
+                        } else {
+                          // Se não for array, trata como string separada por vírgula
+                          keywordsList = category.keywords.split(',').map((k: string) => k.trim()).filter(k => k.length > 0);
+                        }
+                      } catch {
+                        // Se falhar o parse, trata como string separada por vírgula
+                        keywordsList = category.keywords.split(',').map((k: string) => k.trim()).filter(k => k.length > 0);
+                      }
+                    }
 
                     return (
                       <div

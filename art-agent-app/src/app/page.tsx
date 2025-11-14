@@ -176,7 +176,7 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <h2 className="text-4xl font-bold mb-4">Monitoramento Inteligente</h2>
-              <p className="text-red-100 text-lg leading-relaxed mb-6">
+              <p className="text-white text-lg leading-relaxed mb-6">
                 Acompanhe em tempo real as principais tendências, concorrentes e oportunidades do mercado de publicidade e marketing.
               </p>
               <div className="flex gap-4">
@@ -189,25 +189,25 @@ export default function Home() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
-                <p className="text-3xl font-bold">{summary.totalArticles}</p>
-                <p className="text-red-100 text-sm mt-2">Artigos Coletados</p>
+              <div className="bg-white bg-opacity-80 rounded-lg p-4 text-center">
+                <p className="text-3xl font-bold text-red-600">{summary.totalArticles}</p>
+                <p className="text-gray-900 text-sm mt-2 font-semibold">Artigos Coletados</p>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
-                <p className="text-3xl font-bold">{summary.uniqueFeeds}</p>
-                <p className="text-red-100 text-sm mt-2">Fontes Ativas</p>
+              <div className="bg-white bg-opacity-80 rounded-lg p-4 text-center">
+                <p className="text-3xl font-bold text-red-600">{summary.uniqueFeeds}</p>
+                <p className="text-gray-900 text-sm mt-2 font-semibold">Fontes Ativas</p>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
-                <p className="text-3xl font-bold">{summary.uniqueTags}</p>
-                <p className="text-red-100 text-sm mt-2">Tags Identificadas</p>
+              <div className="bg-white bg-opacity-80 rounded-lg p-4 text-center">
+                <p className="text-3xl font-bold text-red-600">{summary.uniqueTags}</p>
+                <p className="text-gray-900 text-sm mt-2 font-semibold">Tags Identificadas</p>
               </div>
-              <div className="bg-white bg-opacity-20 rounded-lg p-4 text-center">
-                <p className="text-lg font-bold">
+              <div className="bg-white bg-opacity-80 rounded-lg p-4 text-center">
+                <p className="text-lg font-bold text-red-600">
                   {summary.lastPublished
                     ? summary.lastPublished.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
                     : '—'}
                 </p>
-                <p className="text-red-100 text-sm mt-2">Última Atualização</p>
+                <p className="text-gray-900 text-sm mt-2 font-semibold">Última Atualização</p>
               </div>
             </div>
           </div>
@@ -284,7 +284,7 @@ export default function Home() {
                           if (e.key === 'Enter') setSearchTerm(searchInput);
                         }}
                         placeholder="Palavras-chave..."
-                        className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none"
+                        className="flex-1 px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none text-gray-900 placeholder:text-gray-600 font-medium"
                       />
                       <button
                         onClick={() => setSearchTerm(searchInput)}
@@ -299,11 +299,11 @@ export default function Home() {
                     <select
                       value={filterFeedId || ''}
                       onChange={(e) => setFilterFeedId(e.target.value || null)}
-                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none"
+                      className="w-full px-4 py-2 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none text-gray-900 font-medium"
                     >
-                      <option value="">Todas as fontes</option>
+                      <option value="" className="text-gray-900">Todas as fontes</option>
                       {feeds.map(feed => (
-                        <option key={feed.id} value={feed.id.toString()}>
+                        <option key={feed.id} value={feed.id.toString()} className="text-gray-900">
                           {feed.name}
                         </option>
                       ))}
@@ -430,12 +430,12 @@ export default function Home() {
             {/* CTA Card */}
             <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-xl shadow-md p-6 text-white">
               <h3 className="text-lg font-bold mb-2">⚙️ Gerenciar</h3>
-              <p className="text-red-100 text-sm mb-4">Configure suas fontes e categorias de tags</p>
+              <p className="text-gray-100 text-sm mb-4 font-medium">Configure suas fontes e categorias de tags</p>
               <div className="space-y-2">
                 <a href="/feeds" className="block w-full bg-white text-red-600 py-2 rounded-lg text-center font-semibold hover:bg-gray-100 transition">
                   Fontes RSS
                 </a>
-                <a href="/tags" className="block w-full bg-white bg-opacity-20 text-white py-2 rounded-lg text-center font-semibold hover:bg-opacity-30 transition">
+                <a href="/tags" className="block w-full bg-white bg-opacity-90 text-gray-900 py-2 rounded-lg text-center font-semibold hover:bg-white transition">
                   Categorias
                 </a>
               </div>

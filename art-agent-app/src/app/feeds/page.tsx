@@ -126,7 +126,7 @@ export default function FeedsPage() {
                     onChange={(e) => setNewFeedName(e.target.value)}
                     disabled={addFeedLoading}
                     placeholder="Ex: Propmark"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none disabled:bg-gray-50"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none disabled:bg-gray-50 text-gray-900 placeholder:text-gray-600 font-medium"
                   />
                 </div>
                 <div>
@@ -139,7 +139,7 @@ export default function FeedsPage() {
                     onChange={(e) => setNewFeedUrl(e.target.value)}
                     disabled={addFeedLoading}
                     placeholder="https://exemplo.com/feed"
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none disabled:bg-gray-50"
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none disabled:bg-gray-50 text-gray-900 placeholder:text-gray-600 font-medium"
                   />
                 </div>
                 {addFeedError && (
