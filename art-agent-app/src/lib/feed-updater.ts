@@ -14,6 +14,33 @@ type FeedItem = {
 // Instancia o parser
 const parser = new Parser<object, FeedItem>();
 
+// Função para parsear a data do RSS de forma mais robusta
+function parseRSSDate(pubDate: string): Date {
+  try {
+    // Remove caracteres extras comuns em feeds RSS
+    const cleanDate = pubDate.trim();
+    
+    // Log para debug
+    console.log(`📅 Parseando data RSS: "${cleanDate}"`);
+    
+    // Tenta fazer parse direto primeiro
+    const date = new Date(cleanDate);
+    
+    // Verifica se a data é válida
+    if (!isNaN(date.getTime())) {
+      console.log(`✅ Data parseada com sucesso: ${date.toISOString()}`);
+      return date;
+    }
+    
+    // Se falhar, retorna data atual como fallback
+    console.warn(`⚠️ Data inválida no RSS: ${pubDate}, usando data atual`);
+    return new Date();
+  } catch (error) {
+    console.error(`❌ Erro ao parsear data RSS: ${pubDate}`, error);
+    return new Date();
+  }
+}
+
 async function getTagsFromContent(title: string, summary: string | null | undefined): Promise<string[]> {
   const content = `${title} ${summary || ''}`;
   return await identificarTags(content);
@@ -52,12 +79,21 @@ export async function runFeedUpdate(): Promise<{ newArticlesCount: number; messa
           if (!articleExists) {
             const tags = await getTagsFromContent(item.title, item.summary || item.content);
             
+            // Parsear a data de forma mais robusta
+            console.log(`🔍 Processando: "${item.title.substring(0, 60)}..."`);
+            console.log(`📅 Data original do RSS: "${item.pubDate}"`);
+            
+            const publishedDate = parseRSSDate(item.pubDate);
+            
+            console.log(`✅ Nova notícia salva - Data final: ${publishedDate.toISOString()}`);
+            console.log(`⏰ Diferença para agora: ${Math.round((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60))} horas\n`);
+            
             await prisma.newsArticle.create({
               data: {
                 title: item.title,
                 link: item.link,
                 summary: item.summary || item.content || '',
-                publishedDate: new Date(item.pubDate),
+                publishedDate: publishedDate,
                 feedId: feed.id,
                 tags: tags.length > 0 ? JSON.stringify(tags) : null, // Salva tags como JSON string
               },

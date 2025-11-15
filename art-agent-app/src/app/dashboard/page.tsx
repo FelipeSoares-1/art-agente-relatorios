@@ -91,6 +91,49 @@ export default function DashboardPage() {
     }
   }
 
+  async function diagnosticarDatas() {
+    if (!confirm('🔍 Deseja executar diagnóstico detalhado das datas?\n\nIsso vai analisar todos os feeds RSS e comparar as datas do RSS com as datas no banco. Os logs detalhados aparecerão no terminal.')) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch('/api/diagnose-dates', { method: 'POST' });
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`🔍 Diagnóstico concluído!\n\nℹ️ Verifique os logs no terminal para ver:\n• Formatos de data problemáticos\n• Diferenças entre RSS e banco\n• Sugestões de correção`);
+      } else {
+        alert(`❌ Erro no diagnóstico: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('❌ Erro ao executar diagnóstico');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function corrigirDatas() {
+    if (!confirm('🔧 Deseja corrigir as datas dos artigos existentes?\n\nIsso vai reprocessar todos os feeds RSS para obter as datas corretas de publicação.')) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch('/api/fix-dates', { method: 'POST' });
+      const data = await response.json();
+      
+      if (data.success) {
+        alert(`✅ Correção concluída!\n\n📊 ${data.checkedCount} artigos verificados\n🔧 ${data.updatedCount} artigos atualizados\n❌ ${data.errorCount} feeds com erro`);
+        await carregarDados();
+      } else {
+        alert(`❌ Erro na correção: ${data.message}`);
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      alert('❌ Erro ao executar correção de datas');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   if (loading && stats.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 p-8 flex items-center justify-center">
@@ -112,7 +155,7 @@ export default function DashboardPage() {
         </div>
 
         {/* KPI Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-12">
           {/* Total de Artigos */}
           <div className="bg-white rounded-xl shadow-md border-l-4 border-red-600 p-6 hover:shadow-lg transition">
             <div className="flex items-center justify-between">
@@ -161,6 +204,30 @@ export default function DashboardPage() {
             >
               <span className="text-4xl">{loading ? '⏳' : '▶️'}</span>
               <span className="font-bold text-sm">{loading ? 'Executando...' : 'Executar Agora'}</span>
+            </button>
+          </div>
+
+          {/* Corrigir Datas */}
+          <div className="bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
+            <button
+              onClick={corrigirDatas}
+              disabled={loading}
+              className="w-full h-full flex flex-col items-center justify-center gap-3 disabled:opacity-50 hover:bg-opacity-90 transition"
+            >
+              <span className="text-4xl">{loading ? '⏳' : '🔧'}</span>
+              <span className="font-bold text-sm">{loading ? 'Processando...' : 'Corrigir Datas'}</span>
+            </button>
+          </div>
+
+          {/* Diagnosticar Datas */}
+          <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
+            <button
+              onClick={diagnosticarDatas}
+              disabled={loading}
+              className="w-full h-full flex flex-col items-center justify-center gap-3 disabled:opacity-50 hover:bg-opacity-90 transition"
+            >
+              <span className="text-4xl">{loading ? '⏳' : '🔍'}</span>
+              <span className="font-bold text-sm">{loading ? 'Analisando...' : 'Diagnosticar'}</span>
             </button>
           </div>
         </div>
