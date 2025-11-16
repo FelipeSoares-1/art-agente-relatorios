@@ -2,7 +2,7 @@
 import { prisma } from '../lib/db.js';
 import Parser from 'rss-parser';
 import { identificarTags } from '../lib/tag-helper.js';
-import { ScrapedArticle } from './ScraperService.js';
+import { ScrapedArticle, SearchResult } from './ScraperService.js';
 
 /**
  * @file Gerencia a lógica de negócio para notícias,
@@ -26,7 +26,7 @@ type FeedItem = {
   content?: string;
 };
 
-const parser = new Parser<object, FeedItem>();
+const parser = new Parser();
 
 class NewsService {
   /**
@@ -109,6 +109,70 @@ class NewsService {
   }
 
   /**
+   * Salva resultados de busca ativa no banco de dados.
+   */
+  public async saveActiveSearchResults(results: SearchResult[]): Promise<{ saved: number; skipped: number }> {
+    let saved = 0;
+    let skipped = 0;
+    
+    console.log(`\n[NewsService] 💾 Salvando ${results.length} artigos de busca ativa no banco...`);
+    
+    let activeSearchFeed = await prisma.rSSFeed.findFirst({
+      where: { name: 'Busca Ativa' }
+    });
+    
+    if (!activeSearchFeed) {
+      activeSearchFeed = await prisma.rSSFeed.create({
+        data: {
+          name: 'Busca Ativa',
+          url: 'https://internal-active-search'
+        }
+      });
+      console.log(`[NewsService]    ✅ Feed "Busca Ativa" criado`);
+    }
+    
+    for (const result of results) {
+      try {
+        const existing = await prisma.newsArticle.findFirst({
+          where: { link: result.link }
+        });
+        
+        if (existing) {
+          skipped++;
+          continue;
+        }
+        
+        const tags = await identificarTags(`${result.title} ${result.summary}`);
+        
+        await prisma.newsArticle.create({
+          data: {
+            title: result.title,
+            link: result.link,
+            newsDate: result.pubDate,
+            summary: result.summary,
+            feedId: activeSearchFeed.id,
+            tags: JSON.stringify(tags)
+          }
+        });
+        
+        saved++;
+        
+        if (saved % 10 === 0) {
+          console.log(`[NewsService]    ✅ ${saved} artigos salvos...`);
+        }
+      } catch (error) {
+        console.error(`[NewsService]    ❌ Erro ao salvar artigo: ${result.title}`, error);
+      }
+    }
+    
+    console.log(`\n[NewsService] ✅ Processo de busca ativa concluído:`);
+    console.log(`   Salvos: ${saved}`);
+    console.log(`   Ignorados (duplicatas): ${skipped}`);
+    
+    return { saved, skipped };
+  }
+
+  /**
    * Extrai tags de conteúdo com base em palavras-chave pré-definidas.
    * @private
    */
@@ -163,7 +227,7 @@ class NewsService {
               if (!articleExists) {
                 const tags = await this.getTagsFromRssContent(item.title, item.summary || item.content, feed.name);
                 
-                console.log(`🔍 Processando: "${item.title.substring(0, 60)}..."`);
+                console.log(`🔍 Processando: "${item.title.substring(0, 60)}"...`);
                 console.log(`📅 Data original do RSS: "${item.pubDate}"`);
                 
                 const publishedDate = this.parseRSSDate(item.pubDate);
@@ -233,7 +297,7 @@ class NewsService {
       console.error(`❌ Erro ao parsear data RSS: ${pubDate}`, error);
       throw error; // Re-lança o erro para o chamador
     }
-  }
+    }
 }
 
 export const newsService = new NewsService();

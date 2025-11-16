@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { newsService } from '@/services/NewsService';
-import { runHighPrioritySearch } from './active-search-service';
+import { scraperService, SearchConfig } from '@/services/ScraperService';
 
 let isSchedulerStarted = false;
 let isActiveSearchStarted = false;
@@ -38,11 +38,17 @@ export function startActiveSearchScheduler() {
     return;
   }
 
+  const config: SearchConfig = {
+    useWebScraping: false, // Por padrão, usa RSS para o cron job
+    maxArticlesPerQuery: 10
+  };
+
   // Executa às 8h da manhã
   cron.schedule('0 8 * * *', async () => {
     console.log('\n🌅 [8h] Executando Busca Ativa matinal...');
     try {
-      await runHighPrioritySearch();
+      const results = await scraperService.runHighPriorityActiveSearch(config);
+      await newsService.saveActiveSearchResults(results);
       console.log('✅ Busca Ativa matinal concluída!');
     } catch (error) {
       console.error('❌ Erro na Busca Ativa matinal:', error);
@@ -55,7 +61,8 @@ export function startActiveSearchScheduler() {
   cron.schedule('0 18 * * *', async () => {
     console.log('\n🌆 [18h] Executando Busca Ativa noturna...');
     try {
-      await runHighPrioritySearch();
+      const results = await scraperService.runHighPriorityActiveSearch(config);
+      await newsService.saveActiveSearchResults(results);
       console.log('✅ Busca Ativa noturna concluída!');
     } catch (error) {
       console.error('❌ Erro na Busca Ativa noturna:', error);
