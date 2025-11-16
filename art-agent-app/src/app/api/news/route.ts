@@ -32,7 +32,7 @@ export async function GET(request: Request) {
         endDateD1.setDate(startDate.getDate() + 1);
         endDateD1.setMilliseconds(-1); // Final do dia anterior
         console.log(`📆 Dia anterior - Entre: ${startDate.toISOString()} e ${endDateD1.toISOString()}`);
-        whereClause.publishedDate = {
+        whereClause.newsDate = {
           gte: startDate,
           lte: endDateD1,
         };
@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     }
 
     if (period !== 'd-1') { // Para 'd-1' a cláusula já foi definida
-      whereClause.publishedDate = {
+      whereClause.newsDate = {
         gte: startDate,
       };
     }
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
     const articles = await prisma.newsArticle.findMany({
       where: whereClause,
       orderBy: {
-        publishedDate: 'desc',
+        newsDate: 'desc',
       },
       include: {
         feed: {
@@ -91,14 +91,14 @@ export async function GET(request: Request) {
     if (articles.length > 0) {
       console.log(`📅 Primeiras 3 datas encontradas:`);
       articles.slice(0, 3).forEach((article, i) => {
-        console.log(`  ${i + 1}. ${article.title.substring(0, 50)}... - ${article.publishedDate.toISOString()}`);
+        console.log(`  ${i + 1}. ${article.title.substring(0, 50)}... - ${article.newsDate.toISOString()}`);
       });
     }
 
     // Mapear para incluir o nome do feed diretamente no objeto do artigo
     let formattedArticles = articles.map(article => ({
       ...article,
-      feedName: article.feed.name,
+      feedName: article.feed?.name || 'Sem feed',
       feed: undefined, // Remover o objeto feed original
     }));
 

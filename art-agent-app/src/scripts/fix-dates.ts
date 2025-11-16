@@ -16,20 +16,16 @@ const parser = new Parser<object, FeedItem>();
 function parseRSSDate(pubDate: string): Date {
   try {
     const cleanDate = pubDate.trim();
-    console.log(`📅 Parseando data RSS: "${cleanDate}"`);
-    
     const date = new Date(cleanDate);
     
-    if (!isNaN(date.getTime())) {
-      console.log(`✅ Data parseada com sucesso: ${date.toISOString()}`);
-      return date;
+    if (isNaN(date.getTime())) {
+      throw new Error(`Data inválida no RSS: "${pubDate}"`);
     }
     
-    console.warn(`⚠️ Data inválida no RSS: ${pubDate}, mantendo data atual`);
-    return new Date(); // Fallback para data atual
+    return date;
   } catch (error) {
     console.error(`❌ Erro ao parsear data RSS: ${pubDate}`, error);
-    return new Date();
+    throw error; // Re-lança o erro para o chamador lidar
   }
 }
 
@@ -97,28 +93,32 @@ async function updateExistingDates() {
           const existingArticle = existingArticles.find(article => article.link === item.link);
           
           if (existingArticle) {
-            // Parse da data correta do RSS
-            const correctDate = parseRSSDate(item.pubDate);
-            const currentDate = new Date(existingArticle.publishedDate);
-            
-            // Verificar se as datas são diferentes (diferença > 1 hora)
-            const timeDiff = Math.abs(correctDate.getTime() - currentDate.getTime());
-            const hoursDiff = timeDiff / (1000 * 60 * 60);
-            
-            if (hoursDiff > 1) {
-              console.log(`🔧 Atualizando: "${existingArticle.title.substring(0, 60)}..."`);
-              console.log(`   📅 Data original RSS: "${item.pubDate}"`);
-              console.log(`   📅 Data antiga: ${currentDate.toISOString()}`);
-              console.log(`   📅 Data correta: ${correctDate.toISOString()}`);
-              console.log(`   ⏰ Diferença: ${Math.round(hoursDiff)} horas\n`);
-              
-              // Atualizar no banco
-              await prisma.newsArticle.update({
-                where: { id: existingArticle.id },
-                data: { publishedDate: correctDate }
-              });
-              
-              updatedCount++;
+            try {
+              // Parse da data correta do RSS
+              const correctDate = parseRSSDate(item.pubDate);
+              const currentDate = new Date(existingArticle.publishedDate);
+
+              // Verificar se as datas são diferentes (diferença > 1 hora)
+              const timeDiff = Math.abs(correctDate.getTime() - currentDate.getTime());
+              const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+              if (hoursDiff > 1) {
+                console.log(`🔧 Atualizando: "${existingArticle.title.substring(0, 60)}..."`);
+                console.log(`   📅 Data original RSS: "${item.pubDate}"`);
+                console.log(`   📅 Data antiga: ${currentDate.toISOString()}`);
+                console.log(`   📅 Data correta: ${correctDate.toISOString()}`);
+                console.log(`   ⏰ Diferença: ${Math.round(hoursDiff)} horas\n`);
+
+                // Atualizar no banco
+                await prisma.newsArticle.update({
+                  where: { id: existingArticle.id },
+                  data: { publishedDate: correctDate },
+                });
+
+                updatedCount++;
+              }
+            } catch (dateError) {
+              console.error(`   - Erro ao processar data para "${item.title}":`, dateError instanceof Error ? dateError.message : dateError);
             }
           }
         }

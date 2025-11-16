@@ -41,9 +41,9 @@ function parseRSSDate(pubDate: string): Date {
   }
 }
 
-async function getTagsFromContent(title: string, summary: string | null | undefined): Promise<string[]> {
+async function getTagsFromContent(title: string, summary: string | null | undefined, feedName: string): Promise<string[]> {
   const content = `${title} ${summary || ''}`;
-  return await identificarTags(content);
+  return await identificarTags(content, feedName);
 }
 
 export async function runFeedUpdate(): Promise<{ newArticlesCount: number; message: string }> {
@@ -77,7 +77,7 @@ export async function runFeedUpdate(): Promise<{ newArticlesCount: number; messa
 
           // 2. Se não existir, cria o novo artigo
           if (!articleExists) {
-            const tags = await getTagsFromContent(item.title, item.summary || item.content);
+            const tags = await getTagsFromContent(item.title, item.summary || item.content, feed.name);
             
             // Parsear a data de forma mais robusta
             console.log(`🔍 Processando: "${item.title.substring(0, 60)}..."`);
@@ -92,11 +92,12 @@ export async function runFeedUpdate(): Promise<{ newArticlesCount: number; messa
               data: {
                 title: item.title,
                 link: item.link,
-                summary: item.summary || item.content || '',
-                publishedDate: publishedDate,
+                newsDate: publishedDate,
+                insertedAt: new Date(),
+                summary: item.summary || item.content,
                 feedId: feed.id,
-                tags: tags.length > 0 ? JSON.stringify(tags) : null, // Salva tags como JSON string
-              },
+                tags: JSON.stringify(tags)
+              }
             });
             newArticlesCount++;
           }

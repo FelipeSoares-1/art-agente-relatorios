@@ -75,29 +75,25 @@ async function scrapeWebsite(
           const dateText = $article.find('time').first().attr('datetime') ||
                           $article.find('time, .entry-date, .post-date, .date, .published').first().text().trim();
           
-          if (title && link && title.length > 10) {
-            let publishedDate = new Date();
-            
-            if (dateText) {
-              const parsed = new Date(dateText);
-              if (!isNaN(parsed.getTime())) {
-                publishedDate = parsed;
-              }
-            }
-            
-            // Filtrar apenas notícias desde startDate
-            if (publishedDate >= startDate || !dateText) {
-              const fullLink = link.startsWith('http') ? link : `${baseUrl}${link}`;
-              
-              // Evitar duplicatas na mesma rodada
-              if (!articles.find(a => a.link === fullLink)) {
-                articles.push({
-                  title,
-                  link: fullLink,
-                  summary: summary || title,
-                  publishedDate
-                });
-                foundInPage++;
+          if (title && link && title.length > 10 && dateText) {
+            const publishedDate = new Date(dateText);
+
+            // Apenas processa se for uma data válida
+            if (!isNaN(publishedDate.getTime())) {
+              // Filtrar apenas notícias desde startDate
+              if (publishedDate >= startDate) {
+                const fullLink = link.startsWith('http') ? link : `${baseUrl}${link}`;
+
+                // Evitar duplicatas na mesma rodada
+                if (!articles.find(a => a.link === fullLink)) {
+                  articles.push({
+                    title,
+                    link: fullLink,
+                    summary: summary || title,
+                    publishedDate,
+                  });
+                  foundInPage++;
+                }
               }
             }
           }
@@ -260,7 +256,8 @@ export async function scrapeNews(
             title: article.title,
             link: article.link,
             summary: article.summary,
-            publishedDate: article.publishedDate,
+            newsDate: article.publishedDate,
+            insertedAt: new Date(),
             feedId: article.feedId,
             tags: tags.length > 0 ? JSON.stringify(tags) : null
           }

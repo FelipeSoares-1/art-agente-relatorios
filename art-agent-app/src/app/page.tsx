@@ -45,6 +45,18 @@ const parseTags = (raw?: string | null): string[] => {
   }
 };
 
+const safeFormatDate = (
+  dateString: string | Date | null | undefined,
+  options?: Intl.DateTimeFormatOptions
+): string => {
+  if (!dateString) return '—';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return '—';
+  }
+  return date.toLocaleDateString('pt-BR', options);
+};
+
 export default function Home() {
   const [news, setNews] = useState<NewsArticle[]>([]);
   const [feeds, setFeeds] = useState<RSSFeed[]>([]);
@@ -140,6 +152,9 @@ export default function Home() {
     });
     const lastPublished = news.reduce<Date | null>((latest, article) => {
       const published = new Date(article.publishedDate);
+      if (isNaN(published.getTime())) {
+        return latest;
+      }
       if (!latest || published > latest) {
         return published;
       }
@@ -203,9 +218,10 @@ export default function Home() {
               </div>
               <div className="bg-white bg-opacity-80 rounded-lg p-4 text-center">
                 <p className="text-lg font-bold text-red-600">
-                  {summary.lastPublished
-                    ? summary.lastPublished.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                    : '—'}
+                  {safeFormatDate(summary.lastPublished, {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
                 <p className="text-gray-900 text-sm mt-2 font-semibold">Última Atualização</p>
               </div>
@@ -352,7 +368,7 @@ export default function Home() {
                             {article.title}
                           </h4>
                           <span className="text-xs text-gray-500 whitespace-nowrap">
-                            {new Date(article.publishedDate).toLocaleDateString('pt-BR')}
+                            {safeFormatDate(article.publishedDate)}
                           </span>
                         </div>
                         <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
@@ -402,9 +418,10 @@ export default function Home() {
                 <li className="flex justify-between pt-3 border-t-2 border-gray-200">
                   <span>Última coleta:</span>
                   <span className="font-bold text-red-600">
-                    {summary.lastPublished
-                      ? summary.lastPublished.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                      : '—'}
+                    {safeFormatDate(summary.lastPublished, {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </span>
                 </li>
               </ul>

@@ -34,10 +34,11 @@ export async function GET(request: Request) {
       });
     }
 
-    // Filtrar notícias que mencionam concorrentes
+    // Filtrar notícias que mencionam concorrentes (com verificação contextual)
     const noticiasComConcorrentes = articles.map(article => {
       const texto = `${article.title} ${article.summary || ''}`;
-      const concorrentes = detectarConcorrentes(texto);
+      const feedName = article.feed.name;
+      const concorrentes = detectarConcorrentes(texto, feedName); // Passa feedName para verificação contextual
       
       return {
         ...article,

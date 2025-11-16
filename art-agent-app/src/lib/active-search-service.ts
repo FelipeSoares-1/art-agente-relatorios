@@ -14,6 +14,7 @@ import Parser from 'rss-parser';
 import { PrismaClient } from '@prisma/client';
 import { identificarTags } from './tag-helper';
 import * as cheerio from 'cheerio';
+import { GoogleNewsWebScraper, type GoogleNewsScrapingOptions } from './google-news-web-scraper';
 
 const prisma = new PrismaClient();
 const parser = new Parser();
@@ -94,6 +95,14 @@ export const SEARCH_TARGETS = {
   }
 };
 
+// Configuração de métodos de busca
+export interface SearchConfig {
+  useWebScraping?: boolean;
+  timeFilter?: '24h' | '7d' | '15d';
+  rssOnly?: boolean;
+  maxArticlesPerQuery?: number;
+}
+
 export interface SearchResult {
   title: string;
   link: string;
@@ -101,13 +110,66 @@ export interface SearchResult {
   summary: string;
   source: string;
   searchTerm: string;
-  foundBy: 'google-news' | 'propmark' | 'meioemensagem' | 'adnews';
+  foundBy: 'google-news' | 'google-news-web-scraping' | 'propmark' | 'meioemensagem' | 'adnews';
 }
 
 /**
  * Busca no Google News via RSS Feed
  * URL: https://news.google.com/rss/search?q={termo}&hl=pt-BR&gl=BR&ceid=BR:pt-419
  */
+/**
+ * Busca no Google News com suporte a RSS e Web Scraping
+ */
+export async function searchGoogleNewsAdvanced(
+  searchTerm: string, 
+  config: SearchConfig = {}
+): Promise<SearchResult[]> {
+  const results: SearchResult[] = [];
+  
+  // Se web scraping está habilitado e há filtro temporal, usar scraping
+  if (config.useWebScraping && config.timeFilter) {
+    console.log(`🤖 Usando web scraping para "${searchTerm}" com filtro ${config.timeFilter}`);
+    
+    try {
+      const scraper = new GoogleNewsWebScraper({
+        timeFilter: config.timeFilter,
+        maxArticles: config.maxArticlesPerQuery || 10
+      });
+      
+      const webArticles = await scraper.searchNews(searchTerm);
+      
+      for (const webArticle of webArticles) {
+        results.push({
+          title: webArticle.title,
+          link: webArticle.link,
+          pubDate: new Date(GoogleNewsWebScraper.convertToNewsArticle(webArticle, searchTerm).publishedDate),
+          summary: webArticle.summary || '',
+          source: webArticle.source || 'Web Scraping',
+          searchTerm,
+          foundBy: 'google-news-web-scraping'
+        });
+      }
+      
+      await scraper.close();
+      console.log(`✅ Web Scraping: ${results.length} artigos encontrados`);
+      
+    } catch (error) {
+      console.error(`❌ Erro no web scraping para "${searchTerm}":`, error);
+      console.log(`🔄 Fallback para RSS...`);
+      
+      // Fallback para RSS se web scraping falhar
+      const rssResults = await searchGoogleNews(searchTerm);
+      results.push(...rssResults);
+    }
+  } else {
+    // Usar RSS tradicional
+    const rssResults = await searchGoogleNews(searchTerm);
+    results.push(...rssResults);
+  }
+  
+  return results;
+}
+
 export async function searchGoogleNews(searchTerm: string): Promise<SearchResult[]> {
   const results: SearchResult[] = [];
   
@@ -338,37 +400,50 @@ export async function searchAdNews(searchTerm: string): Promise<SearchResult[]> 
 /**
  * Executa busca ativa completa para um alvo específico
  */
-export async function performActiveSearch(targetKey: keyof typeof SEARCH_TARGETS): Promise<SearchResult[]> {
+export async function performActiveSearch(
+  targetKey: keyof typeof SEARCH_TARGETS,
+  config: SearchConfig = {}
+): Promise<SearchResult[]> {
   const target = SEARCH_TARGETS[targetKey];
   const allResults: SearchResult[] = [];
   
   console.log(`\n🎯 Iniciando busca ativa: ${target.name}`);
   console.log(`   Prioridade: ${target.priority}`);
-  console.log(`   Keywords: ${target.keywords.join(', ')}\n`);
+  console.log(`   Keywords: ${target.keywords.join(', ')}`);
+  
+  if (config.useWebScraping && config.timeFilter) {
+    console.log(`   🤖 Modo: Web Scraping com filtro ${config.timeFilter}`);
+  } else {
+    console.log(`   📡 Modo: RSS tradicional`);
+  }
+  console.log('');
   
   // Buscar cada keyword em todas as fontes
   for (const keyword of target.keywords) {
-    // Google News
-    const googleResults = await searchGoogleNews(keyword);
+    // Google News (RSS ou Web Scraping baseado na config)
+    const googleResults = await searchGoogleNewsAdvanced(keyword, config);
     allResults.push(...googleResults);
     
     // Aguardar 1 segundo entre requests para não sobrecarregar
     await sleep(1000);
     
-    // Propmark
-    const propmarkResults = await searchPropmark(keyword);
-    allResults.push(...propmarkResults);
-    await sleep(1000);
-    
-    // Meio & Mensagem
-    const mmResults = await searchMeioMensagem(keyword);
-    allResults.push(...mmResults);
-    await sleep(1000);
-    
-    // AdNews
-    const adnewsResults = await searchAdNews(keyword);
-    allResults.push(...adnewsResults);
-    await sleep(1000);
+    // Se não está no modo rssOnly, buscar em outros sites
+    if (!config.rssOnly) {
+      // Propmark
+      const propmarkResults = await searchPropmark(keyword);
+      allResults.push(...propmarkResults);
+      await sleep(1000);
+      
+      // Meio & Mensagem
+      const mmResults = await searchMeioMensagem(keyword);
+      allResults.push(...mmResults);
+      await sleep(1000);
+      
+      // AdNews
+      const adnewsResults = await searchAdNews(keyword);
+      allResults.push(...adnewsResults);
+      await sleep(1000);
+    }
   }
   
   // Remover duplicatas baseado no link
@@ -476,18 +551,23 @@ function sleep(ms: number): Promise<void> {
 /**
  * Executa busca ativa para todos os alvos de alta prioridade
  */
-export async function runHighPrioritySearch(): Promise<void> {
+export async function runHighPrioritySearch(config: SearchConfig = {}): Promise<void> {
   const highPriorityTargets = Object.entries(SEARCH_TARGETS)
     .filter(([, target]) => target.priority === 'HIGH')
     .map(([key]) => key as keyof typeof SEARCH_TARGETS);
   
-  console.log(`\n🚀 Iniciando busca ativa para ${highPriorityTargets.length} alvos de ALTA prioridade\n`);
+  const modeDescription = config.useWebScraping && config.timeFilter 
+    ? `WEB SCRAPING (filtro: ${config.timeFilter})`
+    : 'RSS tradicional';
+  
+  console.log(`\n🚀 Iniciando busca ativa para ${highPriorityTargets.length} alvos de ALTA prioridade`);
+  console.log(`   Modo: ${modeDescription}\n`);
   
   let totalSaved = 0;
   let totalSkipped = 0;
   
   for (const targetKey of highPriorityTargets) {
-    const results = await performActiveSearch(targetKey);
+    const results = await performActiveSearch(targetKey, config);
     const { saved, skipped } = await saveSearchResults(results);
     totalSaved += saved;
     totalSkipped += skipped;
@@ -501,4 +581,63 @@ export async function runHighPrioritySearch(): Promise<void> {
   console.log(`   Duplicatas ignoradas: ${totalSkipped}`);
   
   await prisma.$disconnect();
+}
+
+/**
+ * Executa busca ativa com web scraping usando filtros temporais
+ */
+export async function runActiveSearchWithWebScraping(
+  timeFilter: '24h' | '7d' | '15d' = '24h',
+  targets?: (keyof typeof SEARCH_TARGETS)[]
+): Promise<void> {
+  const config: SearchConfig = {
+    useWebScraping: true,
+    timeFilter,
+    maxArticlesPerQuery: 15
+  };
+  
+  if (targets) {
+    // Buscar apenas alvos específicos
+    console.log(`\n🚀 Iniciando busca ativa com web scraping para alvos específicos`);
+    console.log(`   Filtro temporal: ${timeFilter}`);
+    console.log(`   Alvos: ${targets.map(t => SEARCH_TARGETS[t].name).join(', ')}\n`);
+    
+    let totalSaved = 0;
+    let totalSkipped = 0;
+    
+    for (const targetKey of targets) {
+      const results = await performActiveSearch(targetKey, config);
+      const { saved, skipped } = await saveSearchResults(results);
+      totalSaved += saved;
+      totalSkipped += skipped;
+      
+      console.log(`\n⏳ Aguardando 3 segundos antes do próximo alvo...\n`);
+      await sleep(3000);
+    }
+    
+    console.log(`\n🎉 BUSCA COM WEB SCRAPING COMPLETA!`);
+    console.log(`   Artigos salvos: ${totalSaved}`);
+    console.log(`   Duplicatas ignoradas: ${totalSkipped}`);
+  } else {
+    // Buscar todos os alvos de alta prioridade
+    await runHighPrioritySearch(config);
+  }
+  
+  await prisma.$disconnect();
+}
+
+/**
+ * Executa busca rápida apenas no Google News com web scraping
+ */
+export async function runQuickWebScrapingSearch(
+  timeFilter: '24h' | '7d' | '15d' = '24h'
+): Promise<void> {
+  const config: SearchConfig = {
+    useWebScraping: true,
+    timeFilter,
+    rssOnly: true,  // Apenas Google News
+    maxArticlesPerQuery: 10
+  };
+  
+  await runHighPrioritySearch(config);
 }

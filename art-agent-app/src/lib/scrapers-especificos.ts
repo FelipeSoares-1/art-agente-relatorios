@@ -71,23 +71,20 @@ export async function scrapePropmark(startDate: Date, maxPages: number = 10): Pr
                            $article.find('.entry-content').text().trim().substring(0, 200);
             
             // Buscar data
-            let publishedDate = new Date();
             const $time = $article.find('time');
             const dateStr = $time.attr('datetime') || $time.text().trim();
             
             if (dateStr) {
-              const parsed = new Date(dateStr);
-              if (!isNaN(parsed.getTime())) {
-                publishedDate = parsed;
+              const publishedDate = new Date(dateStr);
+              if (!isNaN(publishedDate.getTime())) {
+                const fullLink = link.startsWith('http') ? link : `${baseUrl}${link}`;
+                
+                // Evitar duplicatas
+                if (!articles.find(a => a.link === fullLink) && publishedDate >= startDate) {
+                  articles.push({ title, link: fullLink, summary: summary || title, publishedDate });
+                  found++;
+                }
               }
-            }
-            
-            const fullLink = link.startsWith('http') ? link : `${baseUrl}${link}`;
-            
-            // Evitar duplicatas
-            if (!articles.find(a => a.link === fullLink) && publishedDate >= startDate) {
-              articles.push({ title, link: fullLink, summary: summary || title, publishedDate });
-              found++;
             }
           });
           
@@ -157,23 +154,20 @@ export async function scrapeMeioMensagem(startDate: Date, maxPages: number = 10)
                            $article.find('.content').text().trim().substring(0, 200);
             
             // Buscar data
-            let publishedDate = new Date();
             const $time = $article.find('time, .date, .published, [datetime]');
             const dateStr = $time.attr('datetime') || $time.text().trim();
             
             if (dateStr) {
-              const parsed = new Date(dateStr);
-              if (!isNaN(parsed.getTime())) {
-                publishedDate = parsed;
+              const publishedDate = new Date(dateStr);
+              if (!isNaN(publishedDate.getTime())) {
+                const fullLink = link.startsWith('http') ? link : `${baseUrl}${link}`;
+                
+                // Evitar duplicatas
+                if (!articles.find(a => a.link === fullLink) && publishedDate >= startDate) {
+                  articles.push({ title, link: fullLink, summary: summary || title, publishedDate });
+                  found++;
+                }
               }
-            }
-            
-            const fullLink = link.startsWith('http') ? link : `${baseUrl}${link}`;
-            
-            // Evitar duplicatas
-            if (!articles.find(a => a.link === fullLink) && publishedDate >= startDate) {
-              articles.push({ title, link: fullLink, summary: summary || title, publishedDate });
-              found++;
             }
           });
           

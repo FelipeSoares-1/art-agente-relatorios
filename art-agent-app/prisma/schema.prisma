@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,33 +8,32 @@ datasource db {
 }
 
 model RSSFeed {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  url       String   @unique
-  createdAt DateTime @default(now())
-  
-  articles NewsArticle[]
+  id        Int           @id @default(autoincrement())
+  name      String        @unique
+  url       String        @unique
+  createdAt DateTime      @default(now())
+  articles  NewsArticle[]
 }
 
 model NewsArticle {
-  id              Int      @id @default(autoincrement())
-  title           String
-  link            String   @unique
-  summary         String?
-  publishedDate   DateTime
-  createdAt       DateTime @default(now())
-  
-  feed    RSSFeed @relation(fields: [feedId], references: [id])
-  feedId  Int
-  tags            String? // Armazenar tags como uma string JSON
+  id         Int      @id @default(autoincrement())
+  title      String
+  link       String   @unique
+  summary    String?
+  newsDate   DateTime
+  insertedAt DateTime
+  createdAt  DateTime @default(now())
+  feedId     Int
+  tags       String?
+  feed       RSSFeed  @relation(fields: [feedId], references: [id])
 }
 
 model TagCategory {
   id        Int      @id @default(autoincrement())
-  name      String   @unique // Nome da tag (ex: "Novos Clientes", "Prêmios")
-  keywords  String   // JSON array de palavras-chave
-  color     String   @default("#3b82f6") // Cor em hex para UI
-  enabled   Boolean  @default(true) // Permite desativar temporariamente
+  name      String   @unique
+  keywords  String
+  color     String   @default("#3b82f6")
+  enabled   Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

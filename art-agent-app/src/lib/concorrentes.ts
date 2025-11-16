@@ -58,30 +58,172 @@ export const CONCORRENTES_ARTPLAN = [
   { nome: 'Paim', nivel: 'BAIXO', ranking: 50, grupo: 'Especializada', alias: ['Paim Comunicação'] },
 ];
 
-// Função para verificar se uma notícia menciona concorrentes
-export function detectarConcorrentes(texto: string): Array<{ nome: string; nivel: string; ranking: number }> {
+// Funções auxiliares para verificação contextual
+function isPortugueseContext(text: string): boolean {
+  const portugueseIndicators = [
+    'em ', 'da ', 'do ', 'na ', 'no ', 'para ', 'com ', 'por ',
+    'brasil', 'brasileiro', 'brasileira', 'são paulo', 'rio de janeiro'
+  ];
+  return portugueseIndicators.some(indicator => text.includes(indicator));
+}
+
+function hasPublicityContext(text: string, agencyName: string): boolean {
+  const contextWords = [
+    'lança', 'cria', 'desenvolve', 'assina', 'campanha', 'cliente', 
+    'conta', 'publicidade', 'propaganda', 'marketing', 'criação'
+  ];
+  
+  // Procura por palavras de contexto próximas à agência
+  const agencyIndex = text.indexOf(agencyName);
+  if (agencyIndex === -1) return false;
+  
+  // Verifica contexto 50 caracteres antes e depois
+  const before = text.substring(Math.max(0, agencyIndex - 50), agencyIndex);
+  const after = text.substring(agencyIndex, agencyIndex + 50);
+  const contextArea = before + after;
+  
+  return contextWords.some(word => contextArea.includes(word));
+}
+
+function isRelevantPublicityNews(title: string, summary: string, feedName: string): { 
+  isRelevant: boolean; 
+  score: number; 
+  reasons: string[] 
+} {
+  const fullText = `${title} ${summary || ''}`.toLowerCase();
+  const titleLower = title.toLowerCase();
+  
+  let score = 0;
+  const reasons: string[] = [];
+
+  // 1. VERIFICAÇÃO DE FONTE CONFIÁVEL (+5 pontos)
+  const trustedSources = ['propmark', 'meio', 'mensagem', 'adnews', 'mundo do marketing', 'campaign', 'update or die', 'clube de criação'];
+  if (trustedSources.some(source => feedName.toLowerCase().includes(source))) {
+    score += 5;
+    reasons.push('Fonte especializada');
+  }
+
+  // 2. PALAVRAS-CHAVE PUBLICITÁRIAS ESPECÍFICAS
+  const specificPublicityTerms = [
+    'lança campanha', 'nova campanha', 'campanha publicitária', 'ação publicitária',
+    'novo cliente', 'ganha conta', 'perde conta', 'conquista cliente', 
+    'direção criativa', 'direção de arte', 'peça publicitária', 'filme publicitário',
+    'prêmio cannes', 'leão de ouro', 'festival de publicidade', 'grand prix',
+    'holding publicitária', 'grupo publicitário', 'agência digital', 'agência criativa',
+    'verba publicitária', 'investimento em mídia', 'planejamento de mídia',
+    'fusão de agências', 'nova agência', 'parceria estratégica'
+  ];
+
+  const specificMatches = specificPublicityTerms.filter(term => fullText.includes(term));
+  if (specificMatches.length > 0) {
+    score += specificMatches.length * 4;
+    reasons.push(`Termos específicos: ${specificMatches.length}`);
+  }
+
+  // 3. PALAVRAS GERAIS PUBLICITÁRIAS (contextualizadas)
+  const generalTerms = [
+    'publicidade', 'propaganda', 'marketing', 'comunicação', 'branding', 
+    'campanha', 'anúncio', 'anuncio', 'criatividade', 'criativo', 'criativa',
+    'cliente', 'marca', 'prêmio', 'premio'
+  ];
+
+  // Mídia/media só em contexto português
+  if (fullText.includes('mídia') || (fullText.includes('media') && isPortugueseContext(fullText))) {
+    generalTerms.push('mídia', 'media');
+  }
+
+  // Agência só se não for governamental
+  if (fullText.includes('agência') && !fullText.includes('agência brasil') && !fullText.includes('agência nacional')) {
+    generalTerms.push('agência', 'agencia');
+  }
+
+  const generalMatches = generalTerms.filter(word => fullText.includes(word));
+  if (generalMatches.length > 0) {
+    score += Math.min(generalMatches.length * 2, 8);
+    reasons.push(`Contexto geral: ${generalMatches.length}`);
+  }
+
+  // 4. PENALIZAÇÃO PARA CONTEXTOS IRRELEVANTES
+  const irrelevantContexts = [
+    'trump', 'biden', 'political', 'político',
+    'scientific study', 'medical research', 'estudo científico',
+    'smartphone review', 'phone comparison', 'qual celular',
+    'weather', 'storm', 'tempestade', 'climate',
+    'space', 'rocket', 'foguete', 'nasa'
+  ];
+
+  const irrelevantFound = irrelevantContexts.find(context => fullText.includes(context));
+  if (irrelevantFound) {
+    score -= 8;
+    reasons.push(`Irrelevante: ${irrelevantFound}`);
+  }
+
+  // 5. BONUS COMERCIAL
+  const commercialContext = ['lançamento', 'produto', 'empresa', 'negócio', 'mercado'];
+  if (commercialContext.some(word => titleLower.includes(word))) {
+    score += 1;
+    reasons.push('Contexto comercial');
+  }
+
+  // DECISÃO FINAL - Thresholds mais restritivos para evitar falsos positivos
+  let threshold = 6; // Aumentado de 4 para 6
+  if (trustedSources.some(source => feedName.toLowerCase().includes(source))) {
+    threshold = 4; // Aumentado de 2 para 4
+  }
+  if (specificMatches.length >= 2) {
+    threshold = 5; // Aumentado de 3 para 5
+  }
+  
+  const isRelevant = score >= threshold;
+  
+  return {
+    isRelevant,
+    score,
+    reasons: [...reasons, `Limiar: ${threshold}`]
+  };
+}
+
+// Função aprimorada para detectar concorrentes com verificação contextual
+export function detectarConcorrentes(texto: string, feedName?: string): Array<{ nome: string; nivel: string; ranking: number }> {
   const textoLower = texto.toLowerCase();
   const concorrentesEncontrados: Array<{ nome: string; nivel: string; ranking: number }> = [];
   
   for (const concorrente of CONCORRENTES_ARTPLAN) {
     const nomeLower = concorrente.nome.toLowerCase();
+    let encontrado = false;
     
     // Verifica nome principal
     if (textoLower.includes(nomeLower)) {
-      if (!concorrentesEncontrados.find(c => c.nome === concorrente.nome)) {
-        concorrentesEncontrados.push({
-          nome: concorrente.nome,
-          nivel: concorrente.nivel,
-          ranking: concorrente.ranking
-        });
+      // Verificar se nome composto aparece completo ou tem contexto adequado
+      if (nomeLower.includes(' ')) {
+        // Nomes compostos devem aparecer completos
+        encontrado = true;
+      } else {
+        // Nomes simples precisam ter contexto publicitário próximo
+        encontrado = feedName ? hasPublicityContext(textoLower, nomeLower) : true;
       }
-      continue;
     }
     
     // Verifica alias
-    if (concorrente.alias) {
-      for (const alias of concorrente.alias) {
-        if (textoLower.includes(alias.toLowerCase())) {
+    if (!encontrado && (concorrente as any).alias) {
+      const aliases = (concorrente as any).alias;
+      if (Array.isArray(aliases)) {
+        for (const alias of aliases) {
+          if (textoLower.includes(alias.toLowerCase())) {
+            encontrado = true;
+            break;
+          }
+        }
+      }
+    }
+    
+    if (encontrado) {
+      // APLICAR VERIFICAÇÃO CONTEXTUAL
+      if (feedName) {
+        const relevanceCheck = isRelevantPublicityNews(texto, '', feedName);
+        
+        // Só adiciona se for contextualmente relevante
+        if (relevanceCheck.isRelevant) {
           if (!concorrentesEncontrados.find(c => c.nome === concorrente.nome)) {
             concorrentesEncontrados.push({
               nome: concorrente.nome,
@@ -89,7 +231,15 @@ export function detectarConcorrentes(texto: string): Array<{ nome: string; nivel
               ranking: concorrente.ranking
             });
           }
-          break;
+        }
+      } else {
+        // Fallback para compatibilidade - sem feedName usa lógica antiga
+        if (!concorrentesEncontrados.find(c => c.nome === concorrente.nome)) {
+          concorrentesEncontrados.push({
+            nome: concorrente.nome,
+            nivel: concorrente.nivel,
+            ranking: concorrente.ranking
+          });
         }
       }
     }
@@ -99,13 +249,60 @@ export function detectarConcorrentes(texto: string): Array<{ nome: string; nivel
   return concorrentesEncontrados.sort((a, b) => a.ranking - b.ranking);
 }
 
-// Função para gerar relatório de concorrentes
-export function gerarRelatorioConcorrentes(noticias: Array<{ title: string; summary?: string | null }>) {
+/**
+ * Versão simplificada que retorna boolean para o sistema de tags
+ * Usa verificação contextual para determinar se é realmente sobre concorrentes
+ */
+export function detectarConcorrentesBoolean(texto: string, feedName: string = ''): boolean {
+  if (!texto) return false;
+
+  const textoLower = texto.toLowerCase();
+  
+  // Primeiro verifica se tem alguma agência mencionada
+  const agencias = [
+    'almapbbdo', 'almap', 'bbdo', 'wmccann', 'mccann', 'ogilvy', 'ddb', 
+    'publicis', 'vmly&r', 'vmly', 'grey', 'havas', 'lew lara', 'wunderman',
+    'africa creative', 'africa', 'sunset', 'soko', 'gut', 'galeria',
+    'talent marcel', 'talent', 'marcel', 'artplan'
+  ];
+
+  const hasAgencyMention = agencias.some(agencia => textoLower.includes(agencia));
+  
+  if (!hasAgencyMention) {
+    // Se não menciona agência específica, verifica termo genérico + contexto
+    const hasGenericTerm = ['agência', 'agencia', 'holding publicitária', 'grupo publicitário'].some(term => 
+      textoLower.includes(term)
+    );
+    
+    if (!hasGenericTerm) {
+      return false;
+    }
+
+    // Se tem termo genérico, precisa de contexto publicitário forte
+    const publicityContext = [
+      'campanha', 'publicidade', 'propaganda', 'comunicação', 'criação',
+      'cliente', 'conta', 'pitch', 'concorrência', 'criatividade'
+    ];
+    
+    const hasStrongContext = publicityContext.some(context => textoLower.includes(context));
+    if (!hasStrongContext) {
+      return false;
+    }
+  }
+
+  // Aplicar verificação contextual usando a função existente
+  const relevanceCheck = isRelevantPublicityNews(texto, '', feedName);
+  return relevanceCheck.isRelevant;
+}
+
+// Função para gerar relatório de concorrentes (atualizada para usar verificação contextual)
+export function gerarRelatorioConcorrentes(noticias: Array<{ title: string; summary?: string | null; feedName?: string }>) {
   const mencoesPorConcorrente: Record<string, { count: number; nivel: string; ranking: number }> = {};
   
   for (const noticia of noticias) {
     const texto = `${noticia.title} ${noticia.summary || ''}`;
-    const concorrentes = detectarConcorrentes(texto);
+    const feedName = noticia.feedName || 'Unknown';
+    const concorrentes = detectarConcorrentes(texto, feedName);
     
     for (const concorrente of concorrentes) {
       if (!mencoesPorConcorrente[concorrente.nome]) {
