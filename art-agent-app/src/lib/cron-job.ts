@@ -1,5 +1,5 @@
 import cron from 'node-cron';
-import { runFeedUpdate } from './feed-updater';
+import { newsService } from '@/services/NewsService';
 import { runHighPrioritySearch } from './active-search-service';
 
 let isSchedulerStarted = false;
@@ -16,7 +16,7 @@ export function startFeedUpdateScheduler() {
   cron.schedule('*/30 * * * *', async () => {
     console.log('Executando tarefa agendada: atualização de feeds...');
     try {
-      await runFeedUpdate();
+      await newsService.updateFromRssFeeds();
     } catch (error) {
       console.error('Erro na tarefa agendada de atualização de feeds:', error);
     }

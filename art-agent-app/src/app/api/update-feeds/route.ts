@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
-import { runFeedUpdate } from '@/lib/feed-updater';
+import { newsService } from '@/services/NewsService';
 
 export async function GET() {
   try {
-    const { message } = await runFeedUpdate();
+    const { message } = await newsService.updateFromRssFeeds();
     return NextResponse.json({ message });
   } catch (error) {
     console.error('Erro na rota /api/update-feeds:', error);
