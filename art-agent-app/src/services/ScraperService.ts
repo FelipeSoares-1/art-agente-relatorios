@@ -283,6 +283,30 @@ class ScraperService {
     return allResults;
   }
 
+  public async runCronScraping(): Promise<ScrapedArticle[]> {
+    console.log('\n🤖 [ScraperService] Iniciando scraping automático para Cron...');
+    const startDate = new Date('2025-01-01'); // Data inicial padrão para o cron
+    const allArticles: ScrapedArticle[] = [];
+
+    // Scrapers específicos
+    const specificScrapersResults = await Promise.all([
+      this._scrapePropmark(startDate, 3),
+      this._scrapeMeioMensagem(startDate, 3),
+      this._scrapeAdNews(startDate, 3)
+    ]);
+    allArticles.push(...specificScrapersResults.flat());
+    await this._sleep(2000);
+
+    // Google Notícias
+    const googleKeywords = ['publicidade brasil', 'marketing brasil', 'agências publicidade'];
+    const googleArticles = await this._scrapeGoogleNews(googleKeywords, 30);
+    allArticles.push(...googleArticles);
+    await this._sleep(2000);
+
+    console.log(`\n✅ [ScraperService] Scraping automático concluído! Total de ${allArticles.length} artigos coletados.`);
+    return allArticles;
+  }
+
   // --- MÉTODOS PRIVADOS - SCRAPERS GENÉRICOS ---
 
   private async _scrapeSingleWebsite(siteName: string, baseUrl: string, startDate: Date, maxPages: number): Promise<ScrapedArticle[]> {

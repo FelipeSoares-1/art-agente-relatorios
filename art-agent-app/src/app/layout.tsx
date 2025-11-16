@@ -2,14 +2,13 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import { startFeedUpdateScheduler, startActiveSearchScheduler } from '@/lib/cron-job';
-import { iniciarCronScraping } from '@/lib/cron-scraping';
+import { startFeedUpdateScheduler, startActiveSearchScheduler, startCronScrapingScheduler } from '@/lib/cron-job';
 
 // Iniciar os schedulers uma única vez no lado do servidor
 if (typeof window === 'undefined') { // Garante que roda apenas no servidor
   startFeedUpdateScheduler();
   startActiveSearchScheduler();
-  iniciarCronScraping();
+  startCronScrapingScheduler();
 }
 
 const geistSans = Geist({
