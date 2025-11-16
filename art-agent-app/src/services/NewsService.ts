@@ -2,11 +2,20 @@
 import { prisma } from '../lib/db.js';
 import Parser from 'rss-parser';
 import { identificarTags } from '../lib/tag-helper.js';
+import { ScrapedArticle } from './ScraperService.js';
 
 /**
  * @file Gerencia a lógica de negócio para notícias,
  * como buscar, criar e reprocessar artigos.
  */
+
+// Palavras-chave para categorização inteligente
+const KEYWORDS = {
+  'Novos Clientes': ['conquista', 'nova conta', 'ganha conta', 'novo cliente', 'pitch'],
+  'Campanhas': ['campanha', 'lança', 'publicidade', 'filme', 'comercial', 'ação'],
+  'Prêmios': ['prêmio', 'vence', 'leão', 'award', 'festival', 'reconhecimento'],
+  'Movimentação de Talentos': ['contrata', 'chega para', 'deixa a agência', 'novo diretor', 'promove'],
+};
 
 // Tipagem para os itens do feed RSS
 type FeedItem = {
@@ -20,6 +29,104 @@ type FeedItem = {
 const parser = new Parser<object, FeedItem>();
 
 class NewsService {
+  /**
+   * Salva uma lista de artigos coletados por um scraper no banco de dados.
+   * Verifica duplicatas, cria feeds se necessário e gera tags.
+   * @param articles - A lista de artigos para salvar.
+   * @returns Um relatório do que foi salvo.
+   */
+  public async saveArticles(articles: ScrapedArticle[]): Promise<{
+    totalSaved: number;
+    totalFound: number;
+    details: { site: string; found: number; saved: number }[];
+  }> {
+    console.log(`\n[NewsService] === INICIANDO SALVAMENTO DE ARTIGOS ===`);
+    console.log(`Total de artigos recebidos: ${articles.length}`);
+
+    let savedCount = 0;
+    const siteCounts: { [key: string]: { found: number; saved: number } } = {};
+
+    // Contar artigos encontrados por site
+    for (const article of articles) {
+      if (!siteCounts[article.siteName]) {
+        siteCounts[article.siteName] = { found: 0, saved: 0 };
+      }
+      siteCounts[article.siteName].found++;
+    }
+
+    for (const article of articles) {
+      try {
+        const exists = await prisma.newsArticle.findUnique({
+          where: { link: article.link }
+        });
+
+        if (!exists) {
+          // Garante que o feed existe para o site do scraper
+          const feed = await prisma.rSSFeed.upsert({
+            where: { name: `${article.siteName} (Scraper)` },
+            update: {},
+            create: {
+              name: `${article.siteName} (Scraper)`,
+              url: new URL(article.link).origin
+            }
+          });
+
+          const tags = this.getTagsFromScrapedContent(article.title, article.summary);
+
+          await prisma.newsArticle.create({
+            data: {
+              title: article.title,
+              link: article.link,
+              summary: article.summary,
+              newsDate: article.publishedDate,
+              insertedAt: new Date(),
+              feedId: feed.id,
+              tags: tags.length > 0 ? JSON.stringify(tags) : null
+            }
+          });
+
+          savedCount++;
+          if (siteCounts[article.siteName]) {
+            siteCounts[article.siteName].saved++;
+          }
+        }
+      } catch (error) {
+        console.error(`[NewsService] Erro ao salvar artigo "${article.title}":`, error);
+      }
+    }
+
+    const details = Object.entries(siteCounts).map(([site, counts]) => ({
+      site,
+      ...counts
+    }));
+
+    console.log(`[NewsService] Total salvo: ${savedCount} de ${articles.length} artigos.`);
+    return {
+      totalSaved: savedCount,
+      totalFound: articles.length,
+      details
+    };
+  }
+
+  /**
+   * Extrai tags de conteúdo com base em palavras-chave pré-definidas.
+   * @private
+   */
+  private getTagsFromScrapedContent(title: string, summary: string | null | undefined): string[] {
+    const content = `${title} ${summary || ''}`.toLowerCase();
+    const tags: string[] = [];
+
+    for (const tag in KEYWORDS) {
+      for (const keyword of KEYWORDS[tag as keyof typeof KEYWORDS]) {
+        if (content.includes(keyword)) {
+          tags.push(tag);
+          break;
+        }
+      }
+    }
+    return tags;
+  }
+
   /**
    * Itera sobre todos os RSSFeeds cadastrados e busca por novos artigos.
    * Artigos novos são salvos no banco de dados.
@@ -54,7 +161,7 @@ class NewsService {
               });
 
               if (!articleExists) {
-                const tags = await this.getTagsFromContent(item.title, item.summary || item.content, feed.name);
+                const tags = await this.getTagsFromRssContent(item.title, item.summary || item.content, feed.name);
                 
                 console.log(`🔍 Processando: "${item.title.substring(0, 60)}..."`);
                 console.log(`📅 Data original do RSS: "${item.pubDate}"`);
@@ -97,10 +204,10 @@ class NewsService {
   }
 
   /**
-   * Extrai tags do conteúdo de um artigo.
+   * Extrai tags do conteúdo de um artigo de RSS.
    * @private
    */
-  private async getTagsFromContent(title: string, summary: string | null | undefined, feedName: string): Promise<string[]> {
+  private async getTagsFromRssContent(title: string, summary: string | null | undefined, feedName: string): Promise<string[]> {
     const content = `${title} ${summary || ''}`;
     return await identificarTags(content, feedName);
   }
