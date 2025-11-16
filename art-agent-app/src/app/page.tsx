@@ -13,6 +13,16 @@ type NewsArticle = {
   tags?: string;
 };
 
+type DetailedArticle = {
+  title: string;
+  link: string;
+  summary: string;
+  publishedDate: string;
+  siteName: string;
+  author?: string;
+  fullContent: string;
+};
+
 type RSSFeed = {
   id: number;
   name: string;
@@ -68,6 +78,11 @@ export default function Home() {
   const [filterFeedId, setFilterFeedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [searchInput, setSearchInput] = useState<string>('');
+
+  // Estados para o Deep Scrape
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [detailedArticle, setDetailedArticle] = useState<DetailedArticle | null>(null);
+  const [deepScrapeLoading, setDeepScrapeLoading] = useState<boolean>(false);
 
   const fetchNews = async (
     period: string | null = null,
@@ -131,6 +146,37 @@ export default function Home() {
       setTagOptions(activeTagNames);
     } catch (e) {
       console.error('Erro ao buscar categorias de tags:', e);
+    }
+  };
+
+  const handleDeepScrape = async (url: string) => {
+    setDeepScrapeLoading(true);
+    setIsModalOpen(true);
+    setDetailedArticle(null);
+
+    try {
+      const response = await fetch('/api/deep-scrape', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setDetailedArticle(data.article);
+      } else {
+        throw new Error(data.error || 'Erro desconhecido no deep scrape');
+      }
+    } catch (e) {
+      console.error('Erro no deep scrape:', e);
+    } finally {
+      setDeepScrapeLoading(false);
     }
   };
 
@@ -356,40 +402,48 @@ export default function Home() {
                   {news.map(article => {
                     const tags = parseTags(article.tags);
                     return (
-                      <a
-                        key={article.id}
-                        href={article.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="block p-4 border-2 border-gray-200 rounded-lg hover:border-red-300 hover:shadow-md transition group"
-                      >
-                        <div className="flex justify-between items-start gap-4 mb-2">
-                          <h4 className="font-bold text-gray-800 group-hover:text-red-600 transition line-clamp-2">
-                            {article.title}
-                          </h4>
-                          <span className="text-xs text-gray-500 whitespace-nowrap">
-                            {safeFormatDate(article.publishedDate)}
-                          </span>
-                        </div>
-                        <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
+                      <div key={article.id} className="p-4 border-2 border-gray-200 rounded-lg hover:border-red-300 hover:shadow-md transition group">
+                        <a
+                          href={article.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <div className="flex justify-between items-start gap-4 mb-2">
+                            <h4 className="font-bold text-gray-800 group-hover:text-red-600 transition line-clamp-2">
+                              {article.title}
+                            </h4>
+                            <span className="text-xs text-gray-500 whitespace-nowrap">
+                              {safeFormatDate(article.publishedDate)}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
+                        </a>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full">
                             {article.feedName}
                           </span>
-                          {tags.length > 0 && (
-                            <div className="flex gap-1 flex-wrap justify-end">
-                              {tags.slice(0, 2).map(tag => (
-                                <span key={tag} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                                  #{tag}
-                                </span>
-                              ))}
-                              {tags.length > 2 && (
-                                <span className="text-xs text-gray-500">+{tags.length - 2}</span>
-                              )}
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {tags.length > 0 && (
+                              <div className="flex gap-1 flex-wrap justify-end">
+                                {tags.slice(0, 2).map(tag => (
+                                  <span key={tag} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
+                                    #{tag}
+                                  </span>
+                                ))}
+                                {tags.length > 2 && (
+                                  <span className="text-xs text-gray-500">+{tags.length - 2}</span>
+                                )}
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleDeepScrape(article.link)}
+                              className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-lg text-xs font-semibold transition"
+                            >
+                              Deep Scrape
+                            </button>
+                          </div>
                         </div>
-                      </a>
+                      </div>
                     );
                   })}
                 </div>
@@ -460,6 +514,40 @@ export default function Home() {
           </aside>
         </div>
       </div>
+
+      {/* Deep Scrape Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            {deepScrapeLoading ? (
+              <div className="text-center">
+                <p className="text-lg font-semibold">Buscando conteúdo...</p>
+              </div>
+            ) : detailedArticle ? (
+              <div>
+                <h2 className="text-2xl font-bold mb-4">{detailedArticle.title}</h2>
+                <div className="flex justify-between text-sm text-gray-500 mb-4">
+                  <span>{detailedArticle.author}</span>
+                  <span>{safeFormatDate(detailedArticle.publishedDate)}</span>
+                </div>
+                <div className="prose max-w-none">
+                  <p>{detailedArticle.fullContent}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center">
+                <p className="text-lg font-semibold">Erro ao buscar conteúdo.</p>
+              </div>
+            )}
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="mt-6 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

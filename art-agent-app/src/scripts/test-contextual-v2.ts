@@ -155,7 +155,7 @@ async function testImprovedDetection() {
       title: true,
       summary: true,
       tags: true,
-      publishedDate: true,
+      newsDate: true,
       link: true,
       feed: {
         select: {
@@ -163,7 +163,7 @@ async function testImprovedDetection() {
         }
       }
     },
-    orderBy: { publishedDate: 'desc' },
+    orderBy: { newsDate: 'desc' },
     take: 20
   });
 

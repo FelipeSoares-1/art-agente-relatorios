@@ -48,7 +48,7 @@ async function updateExistingDates() {
         // Buscar artigos existentes deste feed primeiro
         const existingArticles = await prisma.newsArticle.findMany({
           where: { feedId: feed.id },
-          select: { id: true, link: true, title: true, publishedDate: true },
+          select: { id: true, link: true, title: true, newsDate: true },
           take: 100, // Limitar para não sobrecarregar
           orderBy: { id: 'desc' }
         });
@@ -66,9 +66,9 @@ async function updateExistingDates() {
           if (existingArticles.length > 0) {
             console.log(`📅 Amostra de datas da Busca Ativa (primeiras 3):`);
             existingArticles.slice(0, 3).forEach((article, i) => {
-              const hoursAgo = Math.round((Date.now() - article.publishedDate.getTime()) / (1000 * 60 * 60));
+              const hoursAgo = Math.round((Date.now() - article.newsDate.getTime()) / (1000 * 60 * 60));
               console.log(`  ${i + 1}. ${article.title.substring(0, 50)}...`);
-              console.log(`     Data: ${article.publishedDate.toISOString()} (${hoursAgo}h atrás)\n`);
+              console.log(`     Data: ${article.newsDate.toISOString()} (${hoursAgo}h atrás)\n`);
             });
           }
           continue;
@@ -96,7 +96,7 @@ async function updateExistingDates() {
             try {
               // Parse da data correta do RSS
               const correctDate = parseRSSDate(item.pubDate);
-              const currentDate = new Date(existingArticle.publishedDate);
+              const currentDate = new Date(existingArticle.newsDate);
 
               // Verificar se as datas são diferentes (diferença > 1 hora)
               const timeDiff = Math.abs(correctDate.getTime() - currentDate.getTime());
@@ -112,7 +112,7 @@ async function updateExistingDates() {
                 // Atualizar no banco
                 await prisma.newsArticle.update({
                   where: { id: existingArticle.id },
-                  data: { publishedDate: correctDate },
+                  data: { newsDate: correctDate },
                 });
 
                 updatedCount++;

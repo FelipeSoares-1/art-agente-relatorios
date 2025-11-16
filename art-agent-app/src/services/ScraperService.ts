@@ -2,7 +2,7 @@
 import axios, { AxiosRequestConfig } from 'axios';
 import * as cheerio from 'cheerio';
 import Parser from 'rss-parser';
-import { GoogleNewsWebScraper, type GoogleNewsScrapingOptions } from '../lib/scrapers/google-news-web-scraper.js';
+import { GoogleNewsWebScraper, type GoogleNewsScrapingOptions } from '../lib/scrapers/google-news-web-scraper';
 
 const parser = new Parser();
 
@@ -13,6 +13,11 @@ export interface ScrapedArticle {
   summary: string;
   publishedDate: Date;
   siteName: string;
+}
+
+export interface DetailedArticle extends ScrapedArticle {
+  author?: string;
+  fullContent: string;
 }
 
 export interface SearchConfig {
@@ -159,6 +164,53 @@ export const SEARCH_TARGETS = {
 
 class ScraperService {
   // --- MÉTODOS PÚBLICOS ---
+
+  public async deepScrape(url: string): Promise<DetailedArticle> {
+    console.log(`\n[ScraperService] INICIANDO DEEP SCRAPE PARA: ${url}`);
+    try {
+      const response = await axios.get(url, getRequestConfig(url));
+      const $ = cheerio.load(response.data);
+
+      // Seletores genéricos com fallbacks
+      const title = $('h1, .title, .entry-title, .post-title').first().text().trim();
+      const author = $('.author, .byline, a[rel="author"]').first().text().trim();
+      const dateText = $('time, .date, .published, .post-date').first().attr('datetime') || $('time, .date, .published, .post-date').first().text().trim();
+      
+      // Lógica para extrair o conteúdo principal
+      let fullContent = '';
+      $('article, .post-content, .entry-content, .article-body').each((_, element) => {
+        const contentHtml = $(element).html();
+        if (contentHtml && contentHtml.length > fullContent.length) {
+          fullContent = $(element).text().trim();
+        }
+      });
+
+      // Se o conteúdo ainda estiver vazio, tenta uma abordagem mais simples
+      if (!fullContent) {
+        fullContent = $('body').text().trim();
+      }
+
+      const publishedDate = dateText ? new Date(dateText) : new Date();
+      const siteName = new URL(url).hostname;
+
+      const detailedArticle: DetailedArticle = {
+        title: title || 'Título não encontrado',
+        link: url,
+        summary: fullContent.substring(0, 200) + '...',
+        publishedDate,
+        siteName,
+        author: author || 'Autor não encontrado',
+        fullContent,
+      };
+
+      console.log(`✓ Deep Scrape concluído para: ${url}`);
+      return detailedArticle;
+
+    } catch (error) {
+      console.error(`✗ Erro no Deep Scrape para ${url}:`, error instanceof Error ? error.message : 'Erro desconhecido');
+      throw new Error(`Falha ao fazer o deep scrape da URL: ${url}`);
+    }
+  }
 
   public async runGenericWebScraper(
     startDate: Date = new Date('2025-01-01'),
@@ -626,6 +678,7 @@ class ScraperService {
     try {
       const encodedTerm = encodeURIComponent(searchTerm);
       const searchUrl = `https://adnews.com.br/?s=${encodedTerm}`;
+      const baseUrl = 'https://adnews.com.br';
       console.log(`🔍 Buscando no AdNews (interno): "${searchTerm}"`);
       const response = await axios.get(searchUrl, getRequestConfig(searchUrl));
       const html = response.data;

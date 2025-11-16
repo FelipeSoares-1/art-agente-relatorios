@@ -40,10 +40,10 @@ async function diagnoseDates() {
           
           // Testar diferentes métodos de parse
           const methods = [
-            { name: 'new Date()', parse: () => new Date(item.pubDate) },
-            { name: 'Date.parse()', parse: () => new Date(Date.parse(item.pubDate)) },
+            { name: 'new Date()', parse: () => new Date(item.pubDate || '') },
+            { name: 'Date.parse()', parse: () => new Date(Date.parse(item.pubDate || '')) },
             { name: 'Manual cleanup', parse: () => {
-              const cleaned = item.pubDate.trim().replace(/\s+/g, ' ');
+              const cleaned = (item.pubDate || '').trim().replace(/\s+/g, ' ');
               return new Date(cleaned);
             }}
           ];
@@ -64,7 +64,7 @@ async function diagnoseDates() {
         // Buscar artigos existentes no banco deste feed
         const existingArticles = await prisma.newsArticle.findMany({
           where: { feedId: feed.id },
-          select: { title: true, publishedDate: true, link: true },
+          select: { title: true, newsDate: true, link: true },
           orderBy: { id: 'desc' },
           take: 3
         });
@@ -75,9 +75,9 @@ async function diagnoseDates() {
         } else {
           for (let i = 0; i < existingArticles.length; i++) {
             const article = existingArticles[i];
-            const hoursAgo = Math.round((Date.now() - article.publishedDate.getTime()) / (1000 * 60 * 60));
+            const hoursAgo = Math.round((Date.now() - article.newsDate.getTime()) / (1000 * 60 * 60));
             console.log(`  ${i + 1}. "${article.title.substring(0, 50)}..."`);
-            console.log(`     💾 Data no banco: ${article.publishedDate.toISOString()} (${hoursAgo}h atrás)`);
+            console.log(`     💾 Data no banco: ${article.newsDate.toISOString()} (${hoursAgo}h atrás)`);
           }
         }
 
@@ -89,13 +89,13 @@ async function diagnoseDates() {
           
           const dbArticle = await prisma.newsArticle.findFirst({
             where: { link: item.link },
-            select: { title: true, publishedDate: true }
+            select: { title: true, newsDate: true }
           });
 
           if (dbArticle) {
             comparisonCount++;
             const rssDate = new Date(item.pubDate);
-            const dbDate = dbArticle.publishedDate;
+            const dbDate = dbArticle.newsDate;
             const diffHours = Math.abs(rssDate.getTime() - dbDate.getTime()) / (1000 * 60 * 60);
 
             console.log(`\n  🔍 Artigo encontrado: "${item.title?.substring(0, 40)}..."`);

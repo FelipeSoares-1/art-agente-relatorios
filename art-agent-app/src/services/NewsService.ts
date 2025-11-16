@@ -1,8 +1,8 @@
 // src/services/NewsService.ts
-import { prisma } from '../lib/db.js';
+import { prisma } from '../lib/db';
 import Parser from 'rss-parser';
-import { identificarTags } from '../lib/tag-helper.js';
-import { ScrapedArticle, SearchResult } from './ScraperService.js';
+import { identificarTags } from '../lib/tag-helper';
+import { ScrapedArticle, SearchResult } from './ScraperService';
 
 /**
  * @file Gerencia a lógica de negócio para notícias,
@@ -151,8 +151,9 @@ class NewsService {
             newsDate: result.pubDate,
             summary: result.summary,
             feedId: activeSearchFeed.id,
-            tags: JSON.stringify(tags)
-          }
+            tags: tags.length > 0 ? JSON.stringify(tags) : null,
+            insertedAt: new Date(),
+          },
         });
         
         saved++;
@@ -240,7 +241,7 @@ class NewsService {
                     title: item.title,
                     link: item.link,
                     newsDate: publishedDate,
-                    insertedAt: new Date(),
+                insertedAt: new Date(),
                     summary: item.summary || item.content,
                     feedId: feed.id,
                     tags: JSON.stringify(tags)

@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { detectarConcorrentes } from '../lib/concorrentes';
+import { detectarConcorrentesBoolean } from '../lib/tag-helper';
 
 const prisma = new PrismaClient();
 
@@ -15,7 +15,7 @@ async function testIntegratedImprovement() {
       title: true,
       summary: true,
       tags: true,
-      publishedDate: true,
+      newsDate: true,
       link: true,
       feed: {
         select: {
@@ -23,7 +23,7 @@ async function testIntegratedImprovement() {
         }
       }
     },
-    orderBy: { publishedDate: 'desc' },
+    orderBy: { newsDate: 'desc' },
     take: 20
   });
 
@@ -41,15 +41,15 @@ async function testIntegratedImprovement() {
     console.log(`   📰 Feed: ${noticia.feed.name}`);
     
     // Sistema antigo (sem verificação contextual)
-    const concorrentesAntigos = detectarConcorrentes(`${noticia.title} ${noticia.summary || ''}`);
-    const relevanteAntigo = concorrentesAntigos.length > 0;
+    const concorrentesAntigos = detectarConcorrentesBoolean(`${noticia.title} ${noticia.summary || ''}`);
+    const relevanteAntigo = concorrentesAntigos;
     
     // Sistema novo (com verificação contextual)
-    const concorrentesNovos = detectarConcorrentes(`${noticia.title} ${noticia.summary || ''}`, noticia.feed.name);
-    const relevanteNovo = concorrentesNovos.length > 0;
+    const concorrentesNovos = detectarConcorrentesBoolean(`${noticia.title} ${noticia.summary || ''}`, noticia.feed.name);
+    const relevanteNovo = concorrentesNovos;
     
-    console.log(`   🤖 ANTIGO: ${relevanteAntigo ? '✅ DETECTOU' : '❌ NÃO DETECTOU'} (${concorrentesAntigos.length} agências)`);
-    console.log(`   🧠 NOVO:   ${relevanteNovo ? '✅ DETECTOU' : '❌ NÃO DETECTOU'} (${concorrentesNovos.length} agências)`);
+    console.log(`   🤖 ANTIGO: ${relevanteAntigo ? '✅ DETECTOU' : '❌ NÃO DETECTOU'}`);
+    console.log(`   🧠 NOVO:   ${relevanteNovo ? '✅ DETECTOU' : '❌ NÃO DETECTOU'}`);
     
     if (relevanteAntigo) antigosRelevantes++;
     if (relevanteNovo) novosRelevantes++;
@@ -66,11 +66,7 @@ async function testIntegratedImprovement() {
       console.log(`   ➖ INALTERADO: Continua não detectado`);
     }
     
-    // Mostrar agências detectadas se houver
-    if (concorrentesNovos.length > 0) {
-      const agencias = concorrentesNovos.map(c => `${c.nome} (${c.nivel})`).join(', ');
-      console.log(`   🏢 Agências: ${agencias}`);
-    }
+
 
     console.log('   ' + '─'.repeat(80));
   }

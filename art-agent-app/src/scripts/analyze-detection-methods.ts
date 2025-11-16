@@ -16,31 +16,30 @@ async function analyzeTagDetectionMethods() {
     console.log(`--- TAG: "${category.name}" ---`);
     
     switch (category.name) {
-      case 'Concorrentes':
-        console.log('✅ VERIFICAÇÃO CONTEXTUAL INTELIGENTE');
-        console.log('   • Arquivo: src/lib/concorrentes.ts');
-        console.log('   • Função: detectarConcorrentes() com isRelevantPublicityNews()');
-        console.log('   • Características:');
-        console.log('     - Scoring system (feed source +5pts, específico +4pts, geral +2pts)');
-        console.log('     - Penalização por contexto irrelevante (-8pts)');
-        console.log('     - Threshold: >3 pontos para ser relevante');
-        console.log('     - Resultado: 100% precisão, 0% falsos positivos\n');
-        break;
-
-      case 'Artplan':
-      case 'Novos Clientes': 
-      case 'Eventos':
-      case 'Prêmios de Publicidade':
-        console.log('⚠️ DETECÇÃO BÁSICA POR PALAVRAS-CHAVE');
-        console.log('   • Arquivo: src/lib/tag-helper.ts');
-        console.log('   • Função: identificarTags() - busca simples por keywords');
-        console.log('   • Características:');
-        console.log('     - Apenas verificação se texto contém palavras-chave');
-        console.log('     - SEM verificação de contexto');
-        console.log('     - SEM scoring system');
-        console.log('     - Resultado: Pode ter falsos positivos\n');
-        break;
-
+          case 'Concorrentes':
+            console.log('✅ VERIFICAÇÃO CONTEXTUAL INTELIGENTE');
+            console.log('   • Arquivo: src/lib/tag-helper.ts');
+            console.log('   • Função: detectarConcorrentesBoolean() com isRelevantPublicityNews()');
+            console.log('   • Características:');
+            console.log('     - Scoring system (feed source +5pts, específico +4pts, geral +2pts)');
+            console.log('     - Penalização por contexto irrelevante (-8pts)');
+            console.log('     - Threshold: >3 pontos para ser relevante');
+            console.log('     - Resultado: Alta precisão, poucos falsos positivos\n');
+            break;
+      
+          case 'Artplan':
+          case 'Novos Clientes': 
+          case 'Eventos':
+          case 'Prêmios de Publicidade':
+            console.log('✅ VERIFICAÇÃO CONTEXTUAL INTELIGENTE');
+            console.log('   • Arquivo: src/lib/tag-helper.ts');
+            console.log(`   • Função: detectar${category.name.replace(/\s/g, '')}() com isRelevant${category.name.replace(/\s/g, '')}News()`);
+            console.log('   • Características:');
+            console.log('     - Scoring system (feed source, termos específicos, termos gerais)');
+            console.log('     - Penalização por contexto irrelevante');
+            console.log('     - Threshold ajustável');
+            console.log('     - Resultado: Alta precisão, poucos falsos positivos\n');
+            break;
       default:
         console.log('❓ MÉTODO DESCONHECIDO\n');
         break;
@@ -48,19 +47,17 @@ async function analyzeTagDetectionMethods() {
   }
 
   console.log('🎯 RESUMO DA SITUAÇÃO:\n');
-  console.log('✅ COM VERIFICAÇÃO CONTEXTUAL INTELIGENTE:');
-  console.log('   • Concorrentes (100% precisão)\n');
-  
-  console.log('⚠️ SEM VERIFICAÇÃO CONTEXTUAL (apenas keywords):');
+  console.log('✅ TODAS AS TAGS AGORA UTILIZAM VERIFICAÇÃO CONTEXTUAL INTELIGENTE!');
+  console.log('   • Concorrentes');
   console.log('   • Artplan');
   console.log('   • Novos Clientes'); 
   console.log('   • Eventos');
   console.log('   • Prêmios de Publicidade\n');
 
   console.log('💡 RECOMENDAÇÃO:');
-  console.log('Para máxima precisão, seria ideal implementar verificação');
-  console.log('contextual para todas as tags, seguindo o modelo de sucesso');
-  console.log('da tag "Concorrentes".');
+  console.log('Continuar refinando os sistemas de scoring e as palavras-chave');
+  console.log('para cada categoria, buscando sempre a máxima precisão e minimizando');
+  console.log('falsos positivos/negativos.');
 
   await prisma.$disconnect();
 }

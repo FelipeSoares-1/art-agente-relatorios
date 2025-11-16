@@ -102,10 +102,10 @@ async function countArticlesWithoutTags(): Promise<number> {
 async function verifyRemainingTags() {
   const articlesWithTags = await prisma.newsArticle.findMany({
     where: {
-      tags: {
-        not: null,
-        not: ''
-      }
+      AND: [
+        { tags: { not: null } },
+        { tags: { not: '' } }
+      ]
     },
     select: {
       tags: true

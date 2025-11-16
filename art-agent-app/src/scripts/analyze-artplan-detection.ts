@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { debugArtplanScoring } from '../lib/artplan';
+import { debugArtplanScoring } from '../lib/tag-helper';
 
 const prisma = new PrismaClient();
 

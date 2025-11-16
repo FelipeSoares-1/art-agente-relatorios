@@ -14,7 +14,7 @@ async function diagnosticarTodasAsTags() {
       title: true,
       summary: true,
       tags: true,
-      publishedDate: true,
+      newsDate: true,
       link: true,
       feed: {
         select: {
@@ -22,7 +22,7 @@ async function diagnosticarTodasAsTags() {
         }
       }
     },
-    orderBy: { publishedDate: 'desc' },
+    orderBy: { newsDate: 'desc' },
     take: 1000 // Analisar últimas 1000 notícias
   });
 

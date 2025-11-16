@@ -118,7 +118,7 @@ async function testContextualDetection() {
       title: true,
       summary: true,
       tags: true,
-      publishedDate: true,
+      newsDate: true,
       link: true,
       feed: {
         select: {
@@ -126,7 +126,7 @@ async function testContextualDetection() {
         }
       }
     },
-    orderBy: { publishedDate: 'desc' },
+    orderBy: { newsDate: 'desc' },
     take: 20
   });
 

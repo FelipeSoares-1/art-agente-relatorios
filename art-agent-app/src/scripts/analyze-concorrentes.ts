@@ -13,7 +13,7 @@ async function analyzeConcorrentes() {
       title: true,
       summary: true,
       tags: true,
-      publishedDate: true,
+      newsDate: true,
       link: true,
       feed: {
         select: {
@@ -21,7 +21,7 @@ async function analyzeConcorrentes() {
         }
       }
     },
-    orderBy: { publishedDate: 'desc' },
+    orderBy: { newsDate: 'desc' },
     take: 20
   });
   
@@ -46,7 +46,7 @@ async function analyzeConcorrentes() {
   concorrentes.slice(0, 20).forEach((article, i) => {
     console.log(`${i+1}. TÍTULO: ${article.title}`);
     console.log(`   FEED: ${article.feed.name}`);
-    console.log(`   DATA: ${article.publishedDate}`);
+    console.log(`   DATA: ${article.newsDate}`);
     console.log(`   URL: ${article.link}`);
     
     // Extrair tags individuais

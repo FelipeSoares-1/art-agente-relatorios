@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { detectarConcorrentes, gerarRelatorioConcorrentes, CONCORRENTES_ARTPLAN } from '@/lib/concorrentes';
+import { competitorService } from '@/services/CompetitorService';
+import { CONCORRENTES_ARTPLAN } from '@/lib/tag-helper';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -12,7 +13,7 @@ export async function GET(request: Request) {
     // Buscar todas as notícias
     const articles = await prisma.newsArticle.findMany({
       orderBy: {
-        publishedDate: 'desc',
+        newsDate: 'desc',
       },
       include: {
         feed: {
@@ -25,7 +26,7 @@ export async function GET(request: Request) {
 
     // Se for relatório, retorna estatísticas
     if (relatorio === 'true') {
-      const relatorioData = gerarRelatorioConcorrentes(articles);
+      const relatorioData = competitorService.gerarRelatorioConcorrentes(articles);
       return NextResponse.json({
         totalNoticias: articles.length,
         concorrentesEncontrados: relatorioData.length,
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
     const noticiasComConcorrentes = articles.map(article => {
       const texto = `${article.title} ${article.summary || ''}`;
       const feedName = article.feed.name;
-      const concorrentes = detectarConcorrentes(texto, feedName); // Passa feedName para verificação contextual
+      const concorrentes = competitorService.detectarConcorrentes(texto, feedName); // Passa feedName para verificação contextual
       
       return {
         ...article,

@@ -9,7 +9,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate",
+    "start:cron": "tsx src/scripts/start-cron.ts"
   },
   "dependencies": {
     "@prisma/client": "^6.19.0",
