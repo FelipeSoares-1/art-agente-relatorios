@@ -196,7 +196,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Executar Scraping */}
-          <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
+          <div className="bg-linear-to-br from-red-600 to-red-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
             <button
               onClick={executarScrapingManual}
               disabled={loading}
@@ -208,7 +208,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Corrigir Datas */}
-          <div className="bg-gradient-to-br from-orange-600 to-orange-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
+          <div className="bg-linear-to-br from-orange-600 to-orange-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
             <button
               onClick={corrigirDatas}
               disabled={loading}
@@ -220,7 +220,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Diagnosticar Datas */}
-          <div className="bg-gradient-to-br from-purple-600 to-purple-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
+          <div className="bg-linear-to-br from-purple-600 to-purple-700 rounded-xl shadow-md p-6 text-white hover:shadow-lg transition">
             <button
               onClick={diagnosticarDatas}
               disabled={loading}

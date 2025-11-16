@@ -7,7 +7,7 @@ type NewsArticle = {
   title: string;
   link: string;
   summary: string;
-  publishedDate: string;
+  newsDate: string;
   feedName: string;
   feedId: number;
   tags?: string;
@@ -197,7 +197,7 @@ export default function Home() {
       parseTags(article.tags).forEach(tag => tagSet.add(tag));
     });
     const lastPublished = news.reduce<Date | null>((latest, article) => {
-      const published = new Date(article.publishedDate);
+      const published = new Date(article.newsDate);
       if (isNaN(published.getTime())) {
         return latest;
       }
@@ -233,7 +233,7 @@ export default function Home() {
     <div className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Hero Section */}
-        <section className="mb-12 bg-gradient-to-r from-red-600 to-red-700 rounded-2xl p-8 text-white shadow-lg">
+        <section className="mb-12 bg-linear-to-r from-red-600 to-red-700 rounded-2xl p-8 text-white shadow-lg">
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <h2 className="text-4xl font-bold mb-4">Monitoramento Inteligente</h2>
@@ -413,7 +413,7 @@ export default function Home() {
                               {article.title}
                             </h4>
                             <span className="text-xs text-gray-500 whitespace-nowrap">
-                              {safeFormatDate(article.publishedDate)}
+                              {safeFormatDate(article.newsDate)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
@@ -499,7 +499,7 @@ export default function Home() {
             </div>
 
             {/* CTA Card */}
-            <div className="bg-gradient-to-br from-red-600 to-red-700 rounded-xl shadow-md p-6 text-white">
+            <div className="bg-linear-to-br from-red-600 to-red-700 rounded-xl shadow-md p-6 text-white">
               <h3 className="text-lg font-bold mb-2">⚙️ Gerenciar</h3>
               <p className="text-gray-100 text-sm mb-4 font-medium">Configure suas fontes e categorias de tags</p>
               <div className="space-y-2">

@@ -696,8 +696,8 @@ class ScraperService {
         const summary = lines.slice(1, 4).join(' ').substring(0, 200) || title;
         const publishedDate = new Date(); // AdNews não mostra data na listagem
         const fullLink = `${baseUrl}${href}`;
-        if (!articles.find(a => a.link === fullLink)) {
-          results.push({ title, link: fullLink, summary, publishedDate, source: 'AdNews', searchTerm, foundBy: 'adnews' });
+        if (!results.find(a => a.link === fullLink)) {
+          results.push({ title, link: fullLink, summary, pubDate: publishedDate, source: 'AdNews', searchTerm, foundBy: 'adnews' });
         }
       });
       console.log(`✅ AdNews (interno): ${results.length} artigos encontrados`);
