@@ -100,9 +100,10 @@ export function startEnrichmentWorkerScheduler() {
       }
 
       const result = await response.json();
-      console.log('✅ Worker de enriquecimento concluído!', result);
+      console.log(`✅ Worker de enriquecimento concluído. ${result.message}`);
+
     } catch (error) {
-      console.error('❌ Erro no worker de enriquecimento:', error);
+      console.error('❌ Erro no worker de enriquecimento de artigos:', error);
     }
   }, {
     timezone: "America/Sao_Paulo"
