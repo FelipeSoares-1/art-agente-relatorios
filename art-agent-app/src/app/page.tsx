@@ -1,6 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { htmlToText } from 'html-to-text';
 
 type NewsArticle = {
   id: number;
@@ -65,6 +66,17 @@ const safeFormatDate = (
     return '—';
   }
   return date.toLocaleDateString('pt-BR', options);
+};
+
+const cleanHtml = (html: string | null | undefined): string => {
+  if (!html) return '';
+  return htmlToText(html, {
+    wordwrap: false,
+    selectors: [
+      { selector: 'a', options: { ignoreHref: true } },
+      { selector: 'img', format: 'skip' },
+    ],
+  });
 };
 
 export default function Home() {
@@ -169,7 +181,10 @@ export default function Home() {
 
       const data = await response.json();
       if (data.success) {
-        setDetailedArticle(data.article);
+        setDetailedArticle({
+          ...data.article,
+          fullContent: cleanHtml(data.article.fullContent),
+        });
       } else {
         throw new Error(data.error || 'Erro desconhecido no deep scrape');
       }
@@ -416,7 +431,9 @@ export default function Home() {
                               {safeFormatDate(article.newsDate)}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
+                          <p className="text-sm text-gray-600 mt-2">
+                            {cleanHtml(article.summary)}
+                          </p>
                         </a>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full">
