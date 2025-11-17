@@ -26,6 +26,15 @@ model NewsArticle {
   feedId     Int
   tags       String?
   feed       RSSFeed  @relation(fields: [feedId], references: [id])
+  status     String   @default("RAW")
+}
+
+enum ArticleStatus {
+  RAW
+  PROCESSED
+  PENDING_ENRICHMENT
+  ENRICHED
+  ENRICHMENT_FAILED
 }
 
 model TagCategory {

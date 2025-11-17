@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import { startActiveSearchScheduler, startCronScrapingScheduler, startEnrichmentWorkerScheduler, startFeedUpdateScheduler } from "@/lib/cron-job";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -17,6 +18,14 @@ export const metadata: Metadata = {
   title: "A.R.T. - Agente de Relatórios e Tendências",
   description: "Dashboard e gerenciamento de feeds RSS para agências de publicidade.",
 };
+
+if (typeof window === 'undefined') {
+  console.log("Iniciando schedulers no lado do servidor...");
+  startFeedUpdateScheduler();
+  startActiveSearchScheduler();
+  startCronScrapingScheduler();
+  startEnrichmentWorkerScheduler(); // Adiciona o novo worker
+}
 
 export default function RootLayout({
   children,

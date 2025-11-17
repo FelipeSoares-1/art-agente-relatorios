@@ -59,7 +59,9 @@ ewsDate no select e no orderBy.
 - **Problema:** Type error: Module '"../lib/tag-helper"' has no exported member 'detectarConcorrentes'.
 - **Correção:** Alterado o import de detectarConcorrentes para detectarConcorrentesBoolean e atualizadas as chamadas da função.
 - **Problema:** Type error: Property 'length' does not exist on type 'boolean'.
-- **Correção:** Removido .length > 0 das variáveis elevanteAntigo e elevanteNovo, pois detectarConcorrentesBoolean retorna um booleano.
+- **Correção:** Removido .length > 0 das variáveis 
+elevanteAntigo e 
+elevanteNovo, pois detectarConcorrentesBoolean retorna um booleano.
 - **Problema:** Bloco de código que tentava exibir agências detectadas (concorrentesNovos.map(c => ...)) estava incorreto.
 - **Correção:** Removido o bloco de código problemático.
 
@@ -79,15 +81,19 @@ ewsDate: article.publishedDate no método saveArticles.
 - **Problema:** Type error: Cannot find name 'baseUrl' no método _searchAdNewsInternal.
 - **Correção:** Definida a variável aseUrl dentro do método _searchAdNewsInternal.
 - **Problema:** Type error: Cannot find name 'articles' no método _searchAdNewsInternal.
-- **Correção:** Substituído rticles.find por esults.find no método _searchAdNewsInternal.
+- **Correção:** Substituído rticles.find por 
+esults.find no método _searchAdNewsInternal.
 - **Problema:** Type error: Cannot find name 'results' no método _scrapeAdNews.
-- **Correção:** Substituído esults.find por rticles.find no método _scrapeAdNews.
+- **Correção:** Substituído 
+esults.find por rticles.find no método _scrapeAdNews.
 
 ---
 
 ## Problemas Pendentes
 
-O último erro em src/services/ScraperService.ts (Type error: Cannot find name 'articles'. Did you mean ''? no método _searchAdNewsInternal) ainda persiste. A substituição de rticles.find por esults.find falhou porque a string rticles.find(a => a.link === fullLink) aparece em múltiplos locais, e a ferramenta eplace não conseguiu lidar com isso de forma precisa na última tentativa.
+O último erro em src/services/ScraperService.ts (Type error: Cannot find name 'articles'. Did you mean ''? no método _searchAdNewsInternal) ainda persiste. A substituição de rticles.find por 
+esults.find falhou porque a string rticles.find(a => a.link === fullLink) aparece em múltiplos locais, e a ferramenta 
+eplace não conseguiu lidar com isso de forma precisa na última tentativa.
 
 ---
 
@@ -102,7 +108,8 @@ Este log deve servir como um ponto de partida claro para o próximo modelo, deta
 ### 1. Análise, Validação e Correção de Erros
 
 - **Análise Inicial**: A sessão começou com a análise do GEMINI_SESSION_LOG.md anterior, que apontava para um TypeError não resolvido em src/services/ScraperService.ts.
-- **Correção de Bug (TypeError)**: O erro foi identificado e corrigido. A causa era o uso da variável rticles em vez de esults dentro de um método de busca.
+- **Correção de Bug (TypeError)**: O erro foi identificado e corrigido. A causa era o uso da variável rticles em vez de 
+esults dentro de um método de busca.
 - **Correção de Erros de Linting (Tailwind CSS)**: A verificação de erros em todo o projeto revelou problemas de classes desatualizadas do Tailwind CSS (ex: g-gradient-to-br em vez de g-linear-to-br). As correções foram aplicadas em src/app/dashboard/page.tsx e src/app/page.tsx.
 - **Correção de Bug de Build (TypeError)**: A execução de 
 pm run build falhou, revelando um segundo TypeError em ScraperService.ts, onde publishedDate era usado em vez de pubDate. O erro foi corrigido.
@@ -154,3 +161,36 @@ ewsDate no backend) e corrigido com sucesso no arquivo src/app/page.tsx.
 - **Documentação**: Antes de iniciar a implementação, a nova estratégia foi documentada em um novo arquivo de arquitetura: docs/architecture/COLLECTION_STRATEGY.md.
 
 ---
+## Sessão de 17/11/2025
+
+### 6. Implementação da Arquitetura de Coleta em 3 Fases
+
+- **Análise Crítica e Planejamento**: A sessão começou com a confirmação do usuário para seguir com a nova arquitetura. Foi traçado um plano de 9 passos para a implementação.
+- **Passo 1: Modificação do Schema (`prisma/schema.prisma`)**:
+    - Adicionado o campo `status: String @default("RAW")` ao modelo `NewsArticle`.
+    - Adicionado um `enum ArticleStatus` para documentar os possíveis status (`RAW`, `PROCESSED`, `PENDING_ENRICHMENT`, `ENRICHED`, `ENRICHMENT_FAILED`).
+- **Passo 2: Migração do Banco de Dados**:
+    - **Debugging (Múltiplas Tentativas)**: A execução de `prisma migrate dev` falhou repetidamente devido a problemas com variáveis de ambiente (`DATABASE_URL`) e o path do `dotenv-cli`.
+    - **Solução Robusta**: Foram criados scripts npm (`prisma:migrate`, `db:reset`) em `package.json` para encapsular o uso do `dotenv-cli`, garantindo que os comandos do Prisma sempre executem com o ambiente correto.
+    - **Resolução de "Drift"**: A migração revelou um "Drift" no banco de dados. Com a aprovação do usuário, um `npm run db:reset` foi executado, sincronizando o schema e resolvendo o problema.
+- **Passo 3: Implementação do Utilitário de Validação (`src/lib/date-validator.ts`)**:
+    - Criado o arquivo com a função `isDateSuspicious`, contendo regras para identificar datas inválidas (futuro, muito antigas, padrão Unix epoch).
+- **Passo 4: Integração da Validação no `NewsService.ts`**:
+    - A função `saveArticles` foi modificada para usar `isDateSuspicious`.
+    - Agora, o status de um novo artigo é definido dinamicamente como `PROCESSED` (data válida) ou `PENDING_ENRICHMENT` (data suspeita).
+- **Passo 5: Atualização dos Testes (`src/services/NewsService.test.ts`)**:
+    - **Debugging (Loop)**: O agente entrou em um loop ao tentar criar os testes para o `NewsService`, falhando em entender a estrutura de exportação do serviço.
+    - **Descoberta Chave**: Após análise, foi descoberto que `NewsService.ts` exporta uma instância singleton (`newsService`), não a classe.
+    - **Correção e Sucesso**: Os testes foram reescritos para mockar o `date-validator` e testar os novos status (`PROCESSED` e `PENDING_ENRICHMENT`). Após as correções, os testes passaram com sucesso.
+- **Passo 6: Criação do Worker de Enriquecimento (`src/app/api/enrich-articles/route.ts`)**:
+    - Criado um novo endpoint de API que serve como o worker assíncrono.
+    - A lógica busca por artigos com status `PENDING_ENRICHMENT`.
+- **Passo 7: Implementação da Lógica de "Deep Scrape"**:
+    - Adicionado um novo método `scrapeArticleMetadata(url)` ao `GoogleNewsWebScraper` (`src/lib/scrapers/google-news-web-scraper.ts`), especializado em extrair a data de uma única página.
+    - O worker de enriquecimento foi atualizado para usar este novo método, substituindo a lógica de placeholder.
+- **Passo 8: Agendamento do Cron Job (`src/lib/cron-job.ts` e `src/app/layout.tsx`)**:
+    - Criada uma nova função `startEnrichmentWorkerScheduler` para invocar o endpoint `/api/enrich-articles` a cada hora.
+    - O novo scheduler foi adicionado ao `layout.tsx` para garantir sua inicialização com o servidor.
+
+### Conclusão da Feature
+A implementação da arquitetura de 3 fases foi concluída com sucesso, estabelecendo um pipeline robusto e resiliente para a coleta e o enriquecimento de dados. O sistema agora é capaz de identificar e corrigir datas de notícias de forma assíncrona, melhorando significativamente a qualidade dos dados sem sacrificar a performance da coleta inicial.

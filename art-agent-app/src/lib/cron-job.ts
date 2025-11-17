@@ -5,6 +5,7 @@ import { scraperService, SearchConfig } from '@/services/ScraperService';
 let isSchedulerStarted = false;
 let isActiveSearchStarted = false;
 let isCronScrapingStarted = false;
+let isEnrichmentWorkerStarted = false;
 
 export function startFeedUpdateScheduler() {
   if (isSchedulerStarted) {
@@ -74,6 +75,41 @@ export function startActiveSearchScheduler() {
 
   isActiveSearchStarted = true;
   console.log('✅ Scheduler de Busca Ativa iniciado (8h e 18h diariamente).');
+}
+
+/**
+ * Scheduler para o Worker de Enriquecimento de Artigos.
+ * Executa a cada hora para processar artigos com datas suspeitas.
+ */
+export function startEnrichmentWorkerScheduler() {
+  if (isEnrichmentWorkerStarted) {
+    console.log('Scheduler do Worker de Enriquecimento já está rodando.');
+    return;
+  }
+
+  // Executa no início de cada hora
+  cron.schedule('0 * * * *', async () => {
+    console.log('\n🧩 [Worker] Executando worker de enriquecimento de artigos...');
+    try {
+      // A URL base deve ser configurada via variável de ambiente em produção
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+      const response = await fetch(`${baseUrl}/api/enrich-articles`);
+      
+      if (!response.ok) {
+        throw new Error(`A resposta da API não foi OK: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ Worker de enriquecimento concluído!', result);
+    } catch (error) {
+      console.error('❌ Erro no worker de enriquecimento:', error);
+    }
+  }, {
+    timezone: "America/Sao_Paulo"
+  });
+
+  isEnrichmentWorkerStarted = true;
+  console.log('✅ Scheduler do Worker de Enriquecimento iniciado (a cada hora).');
 }
 
 /**

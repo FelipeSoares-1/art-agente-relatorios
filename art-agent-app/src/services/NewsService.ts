@@ -2,6 +2,7 @@
 import { prisma } from '../lib/db';
 import Parser from 'rss-parser';
 import { identificarTags } from '../lib/tag-helper';
+import { isDateSuspicious } from '../lib/date-validator';
 import { ScrapedArticle, SearchResult } from './ScraperService';
 
 /**
@@ -72,6 +73,9 @@ class NewsService {
           });
 
           const tags = this.getTagsFromScrapedContent(article.title, article.summary);
+          const status = isDateSuspicious(article.publishedDate)
+            ? 'PENDING_ENRICHMENT'
+            : 'PROCESSED';
 
           await prisma.newsArticle.create({
             data: {
@@ -81,7 +85,8 @@ class NewsService {
               newsDate: article.publishedDate,
               insertedAt: new Date(),
               feedId: feed.id,
-              tags: tags.length > 0 ? JSON.stringify(tags) : null
+              tags: tags.length > 0 ? JSON.stringify(tags) : null,
+              status: status
             }
           });
 

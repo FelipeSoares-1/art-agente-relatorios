@@ -1,16 +1,38 @@
 # 🎨 ART Agent App - Sistema de Monitoramento de Notícias
 
-Um sistema inteligente de coleta, processamento e categorização automática de notícias sobre publicidade, marketing e agências. Utiliza web scraping, API feeds RSS e inteligência artificial para classificar artigos em categorias customizáveis.
+Um sistema inteligente de coleta, processamento e enriquecimento automático de notícias sobre publicidade, marketing e agências. Utiliza web scraping, feeds RSS e um pipeline de processamento assíncrono para garantir a alta qualidade e precisão dos dados.
 
 ## 📋 Visão Geral
 
 **ART Agent App** é uma aplicação Next.js que:
 
-- 📰 **Coleta notícias** de múltiplas fontes (Google News, RSS feeds, web scrapers)
-- 🏷️ **Categoriza automaticamente** usando tags configuráveis e palavras-chave
-- 📊 **Exibe dashboard** com filtros temporais (24h, 7d, 15d)
-- ⏰ **Agenda tarefas** de scraping e atualização de feeds
-- 🔍 **Busca ativa** em horários específicos (8h e 18h diariamente)
+- 📰 **Coleta notícias** de múltiplas fontes (Google News, RSS feeds, web scrapers).
+- 🏷️ **Categoriza automaticamente** usando tags configuráveis e lógica contextual.
+- ✨ **Valida e Enriquece Dados**: Identifica notícias com datas imprecisas e usa um worker assíncrono para corrigi-las, garantindo maior acurácia.
+- 📊 **Exibe um dashboard** com filtros por período (24h, 7d, 15d), tags e fontes.
+- ⏰ **Agenda tarefas** de coleta, busca e enriquecimento de dados em segundo plano.
+
+---
+
+## 🏛️ Arquitetura de Coleta de Dados
+
+Para garantir tanto a velocidade da coleta quanto a precisão dos dados, o sistema utiliza uma arquitetura de processamento em 3 fases:
+
+### Fase 1: Coleta Rápida
+- **O quê**: Scrapers e leitores de RSS coletam novos artigos da forma mais rápida possível, focando em título, link e data de publicação inicial.
+- **Objetivo**: Inserir um grande volume de notícias no banco de dados rapidamente para que não se percam.
+
+### Fase 2: Validação e Sinalização
+- **O quê**: No momento da inserção, o `NewsService` realiza uma verificação de sanidade na data de publicação.
+- **Objetivo**: Se a data for suspeita (ex: muito antiga, no futuro, ou uma data padrão), o artigo recebe o status `PENDING_ENRICHMENT`. Caso contrário, recebe `PROCESSED`.
+
+### Fase 3: Enriquecimento Assíncrono
+- **O quê**: Um cron job executa um "worker" a cada hora. Esse worker busca por artigos com status `PENDING_ENRICHMENT`.
+- **Objetivo**: Para cada artigo pendente, o worker realiza um "deep scrape" (usando Puppeteer) na URL original para encontrar a data de publicação correta na página. Após a correção, o status do artigo é atualizado para `ENRICHED`.
+
+Este pipeline garante que o dashboard sempre tenha notícias frescas, enquanto a qualidade dos dados é continuamente melhorada em segundo plano.
+
+---
 
 ## 🚀 Começar
 
@@ -18,86 +40,80 @@ Um sistema inteligente de coleta, processamento e categorização automática de
 
 - Node.js 18+
 - npm ou yarn
-- SQLite (incluído no Prisma)
 
 ### Instalação
 
 ```bash
-# Clone o repositório
+# 1. Clone o repositório
 git clone https://github.com/FelipeSoares-1/art-agente-relatorios.git
 cd art-agent-app
 
-# Instale dependências
+# 2. Instale dependências
 npm install
 
-# Configure as variáveis de ambiente
-# Criar .env.local com DATABASE_URL="file:./prisma/dev.db"
+# 3. Configure as variáveis de ambiente
+# Crie um arquivo .env.local na raiz e adicione a linha abaixo:
+DATABASE_URL="file:./prisma/dev.db"
 
-# Configure o banco de dados
-npx prisma generate
-npx prisma db push
+# 4. Configure e popule o banco de dados
+# Este comando aplica as migrações e garante que o schema está em sincronia.
+npx prisma migrate dev
 
-# Inicie o servidor de desenvolvimento
+# 5. Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
-Acesse `http://localhost:3000` no navegador.
+Acesse `http://localhost:3000` no seu navegador.
 
 ## 📁 Estrutura do Projeto
 
 ```
 src/
 ├── app/
-│   ├── api/              # Rotas API (Next.js)
-│   │   ├── news/         # GET /api/news - Listar notícias
-│   │   ├── feeds/        # GET /api/feeds - Listar feeds RSS
-│   │   ├── tag-categories/ # GET/POST /api/tag-categories - Gerenciar tags
-│   │   └── cron-logs/    # GET /api/cron-logs - Logs de execução
-│   ├── dashboard/        # Página dashboard
-│   ├── feeds/            # Página de feeds
-│   ├── tags/             # Página de gerenciamento de tags
-│   └── page.tsx          # Home
+│   ├── api/                  # Rotas da API (Next.js)
+│   │   ├── news/             # GET /api/news - Listar notícias
+│   │   ├── feeds/            # GET /api/feeds - Listar feeds RSS
+│   │   ├── tag-categories/   # GET/POST /api/tag-categories - Gerenciar tags
+│   │   └── enrich-articles/  # GET /api/enrich-articles - Endpoint do Worker
+│   ├── dashboard/            # Página do dashboard
+│   └── page.tsx              # Página inicial
 ├── lib/
-│   ├── db.ts             # Cliente Prisma
-│   ├── google-news-web-scraper.ts  # Web scraper Google News com Puppeteer
-│   ├── news-scraper.ts   # Scrapers HTML (Propmark, M&M, AdNews)
-│   ├── cron-job.ts       # Scheduler de feeds RSS
-│   ├── cron-scraping.ts  # Scheduler de scraping web
-│   ├── active-search-service.ts    # Busca ativa em horários específicos
-│   ├── tag-helper.ts     # Lógica de categorização por tags
-│   └── feed-updater.ts   # Atualização de feeds
-└── scripts/              # Scripts de administração
+│   ├── db.ts                 # Cliente Prisma (singleton)
+│   ├── cron-job.ts           # Agendador de todas as tarefas (cron jobs)
+│   ├── tag-helper.ts         # Lógica de categorização por tags
+│   ├── date-validator.ts     # Utilitário para validar datas
+│   └── scrapers/
+│       └── google-news-web-scraper.ts # Scraper com Puppeteer
+├── services/
+│   ├── NewsService.ts        # Lógica de negócio para salvar e buscar notícias
+│   └── ScraperService.ts     # Orquestra os diferentes scrapers
+└── scripts/                  # Scripts de administração e testes manuais
 
 prisma/
-├── schema.prisma         # Definição do banco de dados
-└── migrations/           # Histórico de migrações
+├── schema.prisma             # Definição do banco de dados
+└── migrations/               # Histórico de migrações do schema
 
-public/                   # Arquivos estáticos
-.env.local               # Variáveis de ambiente (criar)
-```
-
-## ⚙️ Configuração
-
-### Variáveis de Ambiente (`.env.local`)
-
-```env
-# Banco de dados - OBRIGATÓRIO
-DATABASE_URL="file:./prisma/dev.db"
+public/                       # Arquivos estáticos
+.env.local                   # Variáveis de ambiente (NÃO versionado)
 ```
 
 ## 🗄️ Banco de Dados
 
-### Modelos Principais
+### Modelo `NewsArticle`
 
-**NewsArticle**
 - `id`: ID único
 - `title`: Título do artigo
 - `link`: URL do artigo
 - `summary`: Resumo/descrição
-- `newsDate`: Data da publicação (para filtros temporais)
+- `newsDate`: Data da publicação (campo principal para filtros)
 - `insertedAt`: Data de inserção no banco
-- `createdAt`: Data de criação do registro
-- `feedId`: Referência ao feed RSS
+- `status`: Status do artigo no pipeline de processamento. Valores possíveis:
+    - `PROCESSED`: Coletado com data válida.
+    - `PENDING_ENRICHMENT`: Coletado, mas a data é suspeita e aguarda correção.
+    - `ENRICHED`: A data foi corrigida pelo worker.
+    - `ENRICHMENT_FAILED`: O worker tentou corrigir, mas falhou.
+- `feedId`: Chave estrangeira para o `RSSFeed`.
+- `tags`: String JSON contendo as tags detectadas (ex: `["Prêmios", "Digital"]`).
 - `tags`: Array JSON de tags atribuídas
 
 **TagCategory**

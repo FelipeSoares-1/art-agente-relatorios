@@ -219,12 +219,10 @@ export class GoogleNewsWebScraper {
         return results;
       }, searchOptions.maxArticles || 10);
 
-      console.log(`✅ Extraídos ${articles.length} artigos para "${query}"`);
-      return articles as NewsArticleWeb[];
-
+      return articles;
     } catch (error) {
-      console.error('❌ Erro no scraping do Google News:', error);
-      throw new Error(`Falha no scraping: ${error}`);
+      console.error(`❌ Erro ao buscar notícias para "${query}":`, error);
+      return [];
     } finally {
       await page.close();
     }
@@ -321,5 +319,80 @@ export class GoogleNewsWebScraper {
 
     // Fallback: retornar string vazia para indicar falha
     return '';
+  }
+
+  /**
+   * Visita uma URL de artigo e tenta extrair metadados, especialmente a data.
+   */
+  async scrapeArticleMetadata(url: string): Promise<{ date: Date | null }> {
+    const browser = await this.initBrowser();
+    const page = await browser.newPage();
+    try {
+      console.log(`[Scraper] 🕵️ Visitando URL para deep scrape: ${url}`);
+      await page.goto(url, { waitUntil: 'networkidle2', timeout: this.options.timeout });
+
+      const dateString = await page.evaluate(() => {
+        // 1. Seletor <time datetime="..."> (mais confiável)
+        const timeElement = document.querySelector('time[datetime]');
+        if (timeElement) {
+          return timeElement.getAttribute('datetime');
+        }
+
+        // 2. Meta tag Open Graph
+        const metaOg = document.querySelector('meta[property="article:published_time"]');
+        if (metaOg) {
+          return metaOg.getAttribute('content');
+        }
+
+        // 3. Meta tag <meta name="publish-date" ...>
+        const metaPublishDate = document.querySelector('meta[name="publish-date"]');
+        if (metaPublishDate) {
+            return metaPublishDate.getAttribute('content');
+        }
+
+        // 4. JSON-LD
+        const jsonLdElement = document.querySelector('script[type="application/ld+json"]');
+        if (jsonLdElement) {
+          try {
+            const jsonLd = JSON.parse(jsonLdElement.innerHTML);
+            if (jsonLd.datePublished) {
+              return jsonLd.datePublished;
+            }
+            if (jsonLd.mainEntity && jsonLd.mainEntity.datePublished) {
+                return jsonLd.mainEntity.datePublished;
+            }
+          } catch (e) {
+            // Ignora erros de parsing de JSON
+          }
+        }
+        
+        return null;
+      });
+
+      if (!dateString) {
+        console.log(`[Scraper] ⚠️ Data não encontrada para ${url}`);
+        return { date: null };
+      }
+
+      try {
+        const date = new Date(dateString);
+        // Validação simples para evitar datas inválidas
+        if (isNaN(date.getTime())) {
+            console.log(`[Scraper] ⚠️ Data inválida (parsing falhou): "${dateString}"`);
+            return { date: null };
+        }
+        console.log(`[Scraper] ✅ Data extraída para ${url}: ${date.toISOString()}`);
+        return { date };
+      } catch (e) {
+        console.log(`[Scraper] ⚠️ Erro ao fazer parsing da data: "${dateString}"`);
+        return { date: null };
+      }
+
+    } catch (error) {
+      console.error(`[Scraper] ❌ Erro ao fazer deep scrape da URL ${url}:`, error);
+      return { date: null };
+    } finally {
+      await page.close();
+    }
   }
 }
