@@ -220,7 +220,7 @@ class NewsService {
           
           if (!parsedFeed.items) continue;
 
-          for (const item of parsedFeed.items) {
+          for (const item of parsedFeed.items as FeedItem[]) {
             try {
               if (!item.link || !item.title || !item.pubDate) {
                 continue; // Pula itens sem os campos essenciais
@@ -237,19 +237,23 @@ class NewsService {
                 console.log(`📅 Data original do RSS: "${item.pubDate}"`);
                 
                 const publishedDate = this.parseRSSDate(item.pubDate);
-                
-                console.log(`✅ Nova notícia salva - Data final: ${publishedDate.toISOString()}`);
+                const status = isDateSuspicious(publishedDate)
+                  ? 'PENDING_ENRICHMENT'
+                  : 'PROCESSED';
+
+                console.log(`✅ Nova notícia salva - Data final: ${publishedDate.toISOString()} - Status: ${status}`);
                 console.log(`⏰ Diferença para agora: ${Math.round((Date.now() - publishedDate.getTime()) / (1000 * 60 * 60))} horas\n`);
-                
+
                 await prisma.newsArticle.create({
                   data: {
                     title: item.title,
                     link: item.link,
                     newsDate: publishedDate,
-                insertedAt: new Date(),
+                    insertedAt: new Date(),
                     summary: item.summary || item.content,
                     feedId: feed.id,
-                    tags: JSON.stringify(tags)
+                    tags: JSON.stringify(tags),
+                    status: status,
                   }
                 });
                 newArticlesCount++;

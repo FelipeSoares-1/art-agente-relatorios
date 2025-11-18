@@ -319,7 +319,7 @@ class ScraperService {
     console.log(`\n🚀 [ScraperService] Iniciando busca ativa para ${highPriorityTargets.length} alvos de ALTA prioridade`);
     console.log(`   Modo: ${modeDescription}\n`);
     
-    let allResults: SearchResult[] = [];
+    const allResults: SearchResult[] = [];
     
     for (const targetKey of highPriorityTargets) {
       const results = await this.runActiveSearch(targetKey, config);
@@ -701,8 +701,8 @@ class ScraperService {
         }
       });
       console.log(`✅ AdNews (interno): ${results.length} artigos encontrados`);
-    } catch (error) {
-      console.error(`❌ Erro ao buscar no AdNews (interno) para "${searchTerm}":`, error);
+    } catch (_) {
+      console.error(`❌ Erro ao buscar no AdNews (interno) para "${searchTerm}":`, _);
     }
     return results;
   }

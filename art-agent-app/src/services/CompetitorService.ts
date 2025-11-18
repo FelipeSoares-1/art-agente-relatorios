@@ -1,5 +1,5 @@
 // src/services/CompetitorService.ts
-import { CONCORRENTES_ARTPLAN, isRelevantPublicityNews } from '../lib/tag-helper';
+import { CONCORRENTES_ARTPLAN, isRelevantPublicityNews, CompetidorArtplan } from '../lib/tag-helper';
 
 interface Competitor {
   nome: string;
@@ -18,7 +18,7 @@ class CompetitorService {
     const textoLower = texto.toLowerCase();
     const concorrentesEncontrados: Competitor[] = [];
 
-    for (const concorrente of CONCORRENTES_ARTPLAN) {
+    for (const concorrente of CONCORRENTES_ARTPLAN as CompetidorArtplan[]) {
       const nomeLower = concorrente.nome.toLowerCase();
       let encontrado = false;
 
@@ -28,8 +28,8 @@ class CompetitorService {
       }
 
       // Verifica alias se existir
-      if (!encontrado && 'alias' in concorrente) {
-        const aliases = (concorrente as any).alias;
+      if (!encontrado && concorrente.alias) {
+        const aliases = concorrente.alias;
         if (Array.isArray(aliases)) {
           for (const alias of aliases) {
             if (textoLower.includes(alias.toLowerCase())) {

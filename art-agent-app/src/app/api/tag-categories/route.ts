@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -43,10 +43,10 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(category, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao criar categoria:', error);
     
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json(
         { error: 'Já existe uma categoria com este nome' },
         { status: 409 }
@@ -73,7 +73,7 @@ export async function PUT(request: Request) {
       );
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.TagCategoryUpdateInput = {};
     if (name !== undefined) updateData.name = name;
     if (keywords !== undefined) updateData.keywords = JSON.stringify(keywords);
     if (color !== undefined) updateData.color = color;
@@ -85,10 +85,10 @@ export async function PUT(request: Request) {
     });
 
     return NextResponse.json(category);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao atualizar categoria:', error);
     
-    if (error.code === 'P2025') {
+    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2025') {
       return NextResponse.json(
         { error: 'Categoria não encontrada' },
         { status: 404 }
@@ -120,10 +120,10 @@ export async function DELETE(request: Request) {
     });
 
     return NextResponse.json({ message: 'Categoria removida com sucesso' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao deletar categoria:', error);
     
-    if (error.code === 'P2025') {
+    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2025') {
       return NextResponse.json(
         { error: 'Categoria não encontrada' },
         { status: 404 }

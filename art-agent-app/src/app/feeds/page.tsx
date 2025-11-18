@@ -27,8 +27,9 @@ export default function FeedsPage() {
       }
       const data: RSSFeed[] = await response.json();
       setFeeds(data);
-    } catch (e: any) {
-      setError(`Falha ao carregar feeds: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Erro desconhecido';
+      setError(`Falha ao carregar feeds: ${message}`);
       console.error('Erro ao buscar feeds:', e);
     } finally {
       setLoading(false);
@@ -67,8 +68,9 @@ export default function FeedsPage() {
       setNewFeedName('');
       setNewFeedUrl('');
       fetchFeeds();
-    } catch (e: any) {
-      setAddFeedError(`Falha ao adicionar feed: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Erro desconhecido';
+      setAddFeedError(`Falha ao adicionar feed: ${message}`);
       console.error('Erro ao adicionar feed:', e);
     } finally {
       setAddFeedLoading(false);
@@ -95,8 +97,9 @@ export default function FeedsPage() {
       }
 
       fetchFeeds();
-    } catch (e: any) {
-      alert(`Erro ao remover feed: ${e.message}`);
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Erro desconhecido';
+      alert(`Erro ao remover feed: ${message}`);
       console.error('Erro ao remover feed:', e);
     }
   };

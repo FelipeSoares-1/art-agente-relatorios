@@ -1,6 +1,7 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { htmlToText } from 'html-to-text';
 
 type NewsArticle = {
   id: number;
@@ -65,6 +66,17 @@ const safeFormatDate = (
     return '—';
   }
   return date.toLocaleDateString('pt-BR', options);
+};
+
+const cleanHtml = (html: string | null | undefined): string => {
+  if (!html) return '';
+  return htmlToText(html, {
+    wordwrap: false,
+    selectors: [
+      { selector: 'a', options: { ignoreHref: true } },
+      { selector: 'img', format: 'skip' },
+    ],
+  });
 };
 
 export default function Home() {
@@ -169,7 +181,10 @@ export default function Home() {
 
       const data = await response.json();
       if (data.success) {
-        setDetailedArticle(data.article);
+        setDetailedArticle({
+          ...data.article,
+          fullContent: cleanHtml(data.article.fullContent),
+        });
       } else {
         throw new Error(data.error || 'Erro desconhecido no deep scrape');
       }
@@ -188,6 +203,20 @@ export default function Home() {
   useEffect(() => {
     fetchNews(filterPeriod, filterTag, filterFeedId, searchTerm);
   }, [filterPeriod, filterTag, filterFeedId, searchTerm]);
+
+  // Fechar modal com tecla ESC
+  useEffect(() => {
+    const handleEscKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isModalOpen) {
+        setIsModalOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscKey);
+    return () => {
+      document.removeEventListener('keydown', handleEscKey);
+    };
+  }, [isModalOpen]);
 
   const summary = useMemo(() => {
     const totalArticles = news.length;
@@ -416,7 +445,9 @@ export default function Home() {
                               {safeFormatDate(article.newsDate)}
                             </span>
                           </div>
-                          <p className="text-sm text-gray-600 line-clamp-2 mb-3">{article.summary}</p>
+                          <p className="text-sm text-gray-600 mt-2">
+                            {cleanHtml(article.summary)}
+                          </p>
                         </a>
                         <div className="flex items-center justify-between">
                           <span className="text-xs font-semibold bg-red-100 text-red-700 px-3 py-1 rounded-full">
@@ -517,33 +548,43 @@ export default function Home() {
 
       {/* Deep Scrape Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 bg-gray-900 bg-opacity-30 flex items-center justify-center z-50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setIsModalOpen(false);
+            }
+          }}
+        >
+          <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl shadow-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-200">
             {deepScrapeLoading ? (
-              <div className="text-center">
-                <p className="text-lg font-semibold">Buscando conteúdo...</p>
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-red-600 mx-auto mb-4"></div>
+                <p className="text-lg font-medium text-gray-700">Buscando conteúdo detalhado...</p>
               </div>
             ) : detailedArticle ? (
               <div>
-                <h2 className="text-2xl font-bold mb-4">{detailedArticle.title}</h2>
-                <div className="flex justify-between text-sm text-gray-500 mb-4">
-                  <span>{detailedArticle.author}</span>
-                  <span>{safeFormatDate(detailedArticle.publishedDate)}</span>
+                <h2 className="text-3xl font-bold mb-3 text-gray-800 leading-tight">{detailedArticle.title}</h2>
+                <div className="flex justify-between text-sm text-gray-600 mb-6 border-b border-gray-200 pb-4">
+                  <span className="font-medium">Fonte: {detailedArticle.siteName}</span>
+                  <span className="font-medium">Publicado: {safeFormatDate(detailedArticle.publishedDate)}</span>
+                  {detailedArticle.author && <span className="font-medium">Autor: {detailedArticle.author}</span>}
                 </div>
-                <div className="prose max-w-none">
-                  <p>{detailedArticle.fullContent}</p>
+                <div className="prose max-w-none bg-white rounded-lg p-6 shadow-inner border border-gray-100">
+                  <p className="text-gray-700 leading-relaxed">{detailedArticle.fullContent}</p>
                 </div>
               </div>
             ) : (
-              <div className="text-center">
-                <p className="text-lg font-semibold">Erro ao buscar conteúdo.</p>
+              <div className="text-center py-8">
+                <p className="text-lg font-medium text-gray-700">Erro ao buscar conteúdo detalhado.</p>
+                <p className="text-sm text-gray-500 mt-2">Tente novamente ou verifique a conexão.</p>
               </div>
             )}
             <button
               onClick={() => setIsModalOpen(false)}
-              className="mt-6 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+              className="mt-6 w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 py-3 rounded-xl font-semibold shadow-md transition-all duration-200 transform hover:scale-[1.02]"
             >
-              Fechar
+              Fechar Detalhes (ESC)
             </button>
           </div>
         </div>

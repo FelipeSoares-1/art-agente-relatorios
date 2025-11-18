@@ -1,3 +1,4 @@
+import Image from "next/image";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -40,7 +41,7 @@ export default function RootLayout({
         <header className="sticky top-0 z-50 bg-white border-b-4 border-red-600 shadow-md">
           <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
             <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition">
-              <img src="/Artplan_logo.png" alt="Artplan" className="h-8 w-auto" />
+              <Image src="/Artplan_logo.png" alt="Artplan" width={32} height={32} className="h-8 w-auto" />
               <div>
                 <h1 className="text-xl font-bold text-red-600">A.R.T</h1>
                 <p className="text-xs text-gray-500">Agente de Relatórios e Tendências</p>

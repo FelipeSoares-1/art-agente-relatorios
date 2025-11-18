@@ -36,8 +36,8 @@ export async function POST(request: Request) {
       },
     });
     return NextResponse.json(newFeed, { status: 201 });
-  } catch (error: any) {
-    if (error.code === 'P2002') { // Unique constraint failed
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') { // Unique constraint failed
       return NextResponse.json(
         { error: 'Já existe um feed com este nome ou URL.' },
         { status: 409 }
@@ -66,8 +66,8 @@ export async function DELETE(request: Request) {
       where: { id: parseInt(id) },
     });
     return NextResponse.json({ message: 'Feed excluído com sucesso.' }, { status: 200 });
-  } catch (error: any) {
-    if (error.code === 'P2025') { // Record not found
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2025') { // Record not found
       return NextResponse.json(
         { error: 'Feed não encontrado.' },
         { status: 404 }

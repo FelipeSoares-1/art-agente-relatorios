@@ -9,7 +9,11 @@ export async function GET(request: Request) {
   const feedId = searchParams.get('feedId');
   const search = searchParams.get('search');
 
-  const whereClause: Prisma.NewsArticleWhereInput = {};
+  const whereClause: Prisma.NewsArticleWhereInput = {
+    status: {
+      in: ['PROCESSED', 'ENRICHED'],
+    },
+  };
 
   if (period) {
     const now = new Date();

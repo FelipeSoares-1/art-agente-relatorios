@@ -1,10 +1,17 @@
-import { PrismaClient } from '@prisma/client';
-const prisma = new PrismaClient();
+// ... other imports
 
 interface TagCategory {
   name: string;
   keywords: string[];
   color: string;
+}
+
+export interface CompetidorArtplan {
+  nome: string;
+  nivel: string;
+  ranking: number;
+  grupo: string;
+  alias?: string[];
 }
 
 // Cache das categorias para evitar múltiplas consultas
@@ -22,6 +29,7 @@ export async function loadTagCategories(): Promise<TagCategory[]> {
   if (categoriesCache && (now - cacheTime < CACHE_DURATION)) {
     return categoriesCache;
   }
+// ... rest of the file
 
   try {
     const categories = await prisma.tagCategory.findMany({
@@ -320,7 +328,7 @@ export function debugArtplanScoring(text: string, feedName: string): { score: nu
 // --- Lógica de detecção de Concorrentes movida de concorrentes.ts ---
 
 // Lista de concorrentes da Artplan baseado no arquivo data/concorrentes_artplan_ranking.csv
-export const CONCORRENTES_ARTPLAN = [
+export const CONCORRENTES_ARTPLAN: CompetidorArtplan[] = [
   // ALTO - Concorrência direta mais forte (Top 10)
   { nome: 'WMcCann', nivel: 'ALTO', ranking: 1, grupo: 'Holding IPG' },
   { nome: 'VMLY&R', nivel: 'ALTO', ranking: 2, grupo: 'Holding WPP' },

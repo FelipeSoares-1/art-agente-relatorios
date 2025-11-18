@@ -6,7 +6,7 @@ import { newsService } from '@/services/NewsService';
 export async function GET() {
   try {
     // Por enquanto, retornamos um array vazio para logs, pois a funcionalidade de logs ainda não foi migrada.
-    const logs: any[] = []; 
+    const logs = []; 
     
     return NextResponse.json({
       success: true,

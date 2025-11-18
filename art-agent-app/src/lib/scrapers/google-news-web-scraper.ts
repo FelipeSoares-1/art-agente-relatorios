@@ -1,4 +1,4 @@
-import puppeteer, { Browser, Page } from 'puppeteer';
+import puppeteer, { Browser } from 'puppeteer';
 
 export interface NewsArticleWeb {
   title: string;
@@ -83,14 +83,14 @@ export class GoogleNewsWebScraper {
       // Tentar aguardar por artigos
       try {
         await page.waitForSelector('article', { timeout: 10000 });
-      } catch (error) {
+      } catch (_) {
         console.log('⚠️ Timeout aguardando artigos, tentando continuar...');
       }
 
       // Extrair artigos da página
       const articles = await page.evaluate((maxArticles: number) => {
         const articleElements = document.querySelectorAll('article');
-        const results: any[] = [];
+        const results: NewsArticleWeb[] = [];
 
         articleElements.forEach((article, index) => {
           if (index >= maxArticles) return;
@@ -361,7 +361,7 @@ export class GoogleNewsWebScraper {
             if (jsonLd.mainEntity && jsonLd.mainEntity.datePublished) {
                 return jsonLd.mainEntity.datePublished;
             }
-          } catch (e) {
+          } catch (_) {
             // Ignora erros de parsing de JSON
           }
         }
@@ -383,7 +383,7 @@ export class GoogleNewsWebScraper {
         }
         console.log(`[Scraper] ✅ Data extraída para ${url}: ${date.toISOString()}`);
         return { date };
-      } catch (e) {
+      } catch (_) {
         console.log(`[Scraper] ⚠️ Erro ao fazer parsing da data: "${dateString}"`);
         return { date: null };
       }

@@ -40,7 +40,7 @@ async function improveCategories() {
 
   for (const update of categoryUpdates) {
     try {
-      const result = await prisma.tagCategory.update({
+      await prisma.tagCategory.update({
         where: { name: update.name },
         data: { keywords: update.keywords }
       });
