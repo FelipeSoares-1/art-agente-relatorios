@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useEffect, useState } from 'react';
 
@@ -246,7 +246,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-4">
-                      <div className={`w-4 h-4 rounded-full animate-pulse ${
+                      <div className={`w-4 h-4 rounded-full animate-pulse ${ 
                         stat.status === 'operacional' ? 'bg-green-500' :
                         stat.status === 'erro' ? 'bg-red-500' : 'bg-yellow-500'
                       }`}></div>
