@@ -3,14 +3,26 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { NewsArticle } from '@prisma/client';
 import { GoogleNewsWebScraper } from '@/lib/scrapers/google-news-web-scraper';
+import { identificarTags } from '@/lib/tag-helper';
 
-const scraper = new GoogleNewsWebScraper();
+interface ScrapedMetadata {
+    newsDate: Date | null;
+    fullContent: string;
+}
 
-async function deepScrapeArticle(article: NewsArticle): Promise<Date | null> {
+async function deepScrapeArticle(article: NewsArticle, scraper: GoogleNewsWebScraper): Promise<ScrapedMetadata | null> {
     console.log(`[EnrichWorker] Iniciando deep scrape para: ${article.link}`);
     try {
         const metadata = await scraper.scrapeArticleMetadata(article.link);
-        return metadata.date;
+        // Ensure metadata and newsDate exist, and fullContent is a string
+        if (!metadata || !metadata.newsDate) {
+            console.error(`[EnrichWorker] Metadados ou data de notícia ausentes para ${article.link}`);
+            return null;
+        }
+        return {
+            newsDate: metadata.newsDate,
+            fullContent: metadata.fullContent || '',
+        };
     } catch (error) {
         console.error(`[EnrichWorker] Erro no deep scrape para ${article.link}:`, error);
         return null;
@@ -18,6 +30,7 @@ async function deepScrapeArticle(article: NewsArticle): Promise<Date | null> {
 }
 
 export async function GET() {
+    const scraper = new GoogleNewsWebScraper();
     console.log('[EnrichWorker] Iniciando busca por artigos pendentes de enriquecimento...');
 
     try {
@@ -40,13 +53,15 @@ export async function GET() {
 
         for (const article of articlesToEnrich) {
             try {
-                const newDate = await deepScrapeArticle(article);
+                const metadata = await deepScrapeArticle(article, scraper);
 
-                if (newDate) {
+                if (metadata) {
+                    const newTags = identificarTags(metadata.fullContent, article.title);
                     await prisma.newsArticle.update({
                         where: { id: article.id },
                         data: {
-                            newsDate: newDate,
+                            newsDate: metadata.newsDate,
+                            tags: JSON.stringify(newTags),
                             status: 'ENRICHED',
                         },
                     });
@@ -62,7 +77,6 @@ export async function GET() {
             } catch (error) {
                 failedCount++;
                 console.error(`[EnrichWorker] Erro ao processar o artigo ${article.id}:`, error);
-                // Opcional: marcar como falho no DB
                  await prisma.newsArticle.update({
                     where: { id: article.id },
                     data: { status: 'ENRICHMENT_FAILED' },
