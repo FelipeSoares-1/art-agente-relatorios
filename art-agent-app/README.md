@@ -28,7 +28,7 @@ Para garantir tanto a velocidade da coleta quanto a precisão dos dados, o siste
 
 ### Fase 3: Enriquecimento Assíncrono
 - **O quê**: Um cron job executa um "worker" a cada hora. Esse worker busca por artigos com status `PENDING_ENRICHMENT`.
-- **Objetivo**: Para cada artigo pendente, o worker realiza um "deep scrape" (usando Puppeteer) na URL original para encontrar a data de publicação correta na página. Após a correção, o status do artigo é atualizado para `ENRICHED`.
+- **Objetivo**: Para cada artigo pendente, o worker realiza um "deep scrape" para obter o **conteúdo completo** e a data de publicação correta. Com base no conteúdo completo, as **tags são reavaliadas** para garantir maior precisão. Após a correção e reavaliação, o status do artigo é atualizado para `ENRICHED`.
 
 Este pipeline garante que o dashboard sempre tenha notícias frescas, enquanto a qualidade dos dados é continuamente melhorada em segundo plano.
 

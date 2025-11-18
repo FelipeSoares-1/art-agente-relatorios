@@ -66,7 +66,7 @@ Para suportar esta arquitetura, o seguinte campo será adicionado ao modelo `New
 ```prisma
 model NewsArticle {
   // ... campos existentes ...
-  tags   String?
-  status String  @default("PENDING_ENRICHMENT") // Valores: PENDING_ENRICHMENT, PROCESSED, FAILED
+  tags   String? // String JSON contendo as tags detectadas
+  status String  // Valores: PROCESSED, PENDING_ENRICHMENT, ENRICHED, ENRICHMENT_FAILED
 }
 ```

@@ -1,5 +1,25 @@
 # 📋 Histórico de Melhorias - ART Agent App
 
+## ✨ Funcionalidade: Reavaliação de Tags no Enriquecimento
+
+**Data:** 18/11/2025
+**Escopo:** Melhorar a precisão da categorização de notícias.
+
+### Problema
+- A categorização inicial de tags era baseada apenas no título e resumo do artigo, o que levava a falsos positivos (ex: notícias sobre "publicidade" em geral sendo marcadas como "Concorrentes").
+
+### Solução Implementada
+1.  **Modificação do Worker de Enriquecimento:** O worker (`/api/enrich-articles`) foi atualizado.
+2.  **Deep Scrape para Conteúdo Completo:** O worker agora busca o conteúdo completo do artigo.
+3.  **Reavaliação de Tags:** A função `identificarTags` é chamada novamente, desta vez com o conteúdo completo, para uma análise contextual muito mais precisa.
+4.  **Atualização no Banco:** As novas tags, mais precisas, substituem as antigas no banco de dados.
+5.  **Cobertura de Testes:** Foi criado um conjunto de testes (`route.test.ts`) para garantir que a nova lógica funcione como esperado e para prevenir regressões.
+
+### Resultado
+- A precisão das tags foi significativamente melhorada, reduzindo a ocorrência de classificações incorretas.
+
+
+
 Documento que registra todas as correções, melhorias e problemas resolvidos para fins de referência futura e debugging.
 
 **Última atualização:** 18 de Novembro de 2025
