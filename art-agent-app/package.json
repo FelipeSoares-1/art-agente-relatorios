@@ -22,6 +22,7 @@
     "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/typography": "^0.5.19",
     "@types/node-cron": "^3.0.11",
+    "@types/recharts": "^1.8.29",
     "axios": "^1.13.2",
     "cheerio": "^1.1.2",
     "csv-parse": "^6.1.0",
@@ -33,6 +34,7 @@
     "puppeteer": "^24.30.0",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "recharts": "^3.4.1",
     "rss-parser": "^3.13.0"
   },
   "devDependencies": {

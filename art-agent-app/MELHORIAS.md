@@ -440,8 +440,11 @@ createdAt DATETIME
 - [ ] Cache HTTP para APIs
 
 ### Priority 2 (Médio)
-- [ ] Dashboard com gráficos/analytics
-- [ ] Export de dados (CSV, PDF)
+- [ ] **Evoluir Página de Relatórios:**
+  - [ ] **Filtros Avançados:** Adicionar um seletor de intervalo de datas personalizado (calendário).
+  - [ ] **Cross-Filtering:** Permitir clicar em um item de um gráfico para filtrar os outros.
+  - [ ] **Exportação de Dados:** Adicionar botões para "Exportar como Imagem (PNG)" e "Baixar dados (CSV)" em cada gráfico.
+  - [ ] **Novos Gráficos:** Implementar um gráfico de "Nuvem de Palavras" (Word Cloud) para destacar termos frequentes.
 - [ ] Notificações de novas notícias
 - [ ] Sistema de favoritos
 

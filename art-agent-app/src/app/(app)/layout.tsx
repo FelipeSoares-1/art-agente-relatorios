@@ -22,16 +22,19 @@ export default function AppLayout({
           </Link>
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
             <Link href="/" className="text-gray-700 hover:text-red-600 transition font-semibold">
-              🏠 Home
+              📰 Notícias
+            </Link>
+            <Link href="/reports" className="text-gray-700 hover:text-red-600 transition font-semibold">
+              📈 Relatórios
             </Link>
             <Link href="/feeds" className="text-gray-700 hover:text-red-600 transition font-semibold">
-              📰 Fontes
+              ⚙️ Fontes
             </Link>
             <Link href="/tags" className="text-gray-700 hover:text-red-600 transition font-semibold">
               🏷️ Tags
             </Link>
             <Link href="/dashboard" className="text-gray-700 hover:text-red-600 transition font-semibold">
-              📊 Dashboard
+              📊 Status do Sistema
             </Link>
           </nav>
         </div>

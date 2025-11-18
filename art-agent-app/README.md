@@ -8,8 +8,9 @@ Um sistema inteligente de coleta, processamento e enriquecimento automático de 
 
 - 📰 **Coleta notícias** de múltiplas fontes (Google News, RSS feeds, web scrapers).
 - 🏷️ **Categoriza automaticamente** usando tags configuráveis e lógica contextual.
+- 📈 **Apresenta uma página de Relatórios** com gráficos interativos sobre tendências de tags, menções de concorrentes e distribuição de fontes.
 - ✨ **Valida e Enriquece Dados**: Identifica notícias com datas imprecisas e usa um worker assíncrono para corrigi-las, garantindo maior acurácia.
-- 📊 **Exibe um dashboard** com filtros por período (24h, 7d, 15d), tags e fontes.
+- 🛠️ **Oferece uma página de Status do Sistema** para monitorar a saúde dos coletores de notícias e executar ações administrativas.
 - ⏰ **Agenda tarefas** de coleta, busca e enriquecimento de dados em segundo plano.
 
 ---
@@ -75,8 +76,10 @@ src/
 │   │   ├── feeds/            # GET /api/feeds - Listar feeds RSS
 │   │   ├── tag-categories/   # GET/POST /api/tag-categories - Gerenciar tags
 │   │   └── enrich-articles/  # GET /api/enrich-articles - Endpoint do Worker
-│   ├── dashboard/            # Página do dashboard
-│   └── page.tsx              # Página inicial
+│   │   └── reports/          # Endpoints para os gráficos de relatórios
+│   ├── dashboard/            # Página de Status do Sistema
+│   ├── reports/              # Página de Relatórios com gráficos
+│   └── page.tsx              # Página inicial (Feed de Notícias)
 ├── lib/
 │   ├── db.ts                 # Cliente Prisma (singleton)
 │   ├── cron-job.ts           # Agendador de todas as tarefas (cron jobs)
