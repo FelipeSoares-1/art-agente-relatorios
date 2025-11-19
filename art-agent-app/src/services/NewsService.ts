@@ -4,6 +4,7 @@ import Parser from 'rss-parser';
 import { identificarTags } from '../lib/tag-helper';
 import { isDateSuspicious } from '../lib/date-validator';
 import { ScrapedArticle, SearchResult } from './ScraperService';
+import { htmlToText } from 'html-to-text';
 
 /**
  * @file Gerencia a lógica de negócio para notícias,
@@ -72,7 +73,9 @@ class NewsService {
             }
           });
 
-          const tags = this.getTagsFromScrapedContent(article.title, article.summary);
+          const cleanSummary = article.summary ? htmlToText(article.summary, { wordwrap: 130 }) : null;
+
+          const tags = this.getTagsFromScrapedContent(article.title, cleanSummary);
           const status = isDateSuspicious(article.publishedDate)
             ? 'PENDING_ENRICHMENT'
             : 'PROCESSED';
@@ -81,7 +84,7 @@ class NewsService {
             data: {
               title: article.title,
               link: article.link,
-              summary: article.summary,
+              summary: cleanSummary,
               newsDate: article.publishedDate,
               insertedAt: new Date(),
               feedId: feed.id,
@@ -231,7 +234,10 @@ class NewsService {
               });
 
               if (!articleExists) {
-                const tags = await this.getTagsFromRssContent(item.title, item.summary || item.content, feed.name);
+                const summaryText = item.summary || item.content || '';
+                const cleanSummary = htmlToText(summaryText, { wordwrap: 130 });
+
+                const tags = await this.getTagsFromRssContent(item.title, cleanSummary, feed.name);
                 
                 console.log(`🔍 Processando: "${item.title.substring(0, 60)}"...`);
                 console.log(`📅 Data original do RSS: "${item.pubDate}"`);

@@ -30,6 +30,10 @@ if (typeof window === 'undefined') {
   startEnrichmentWorkerScheduler();
 }
 
+import { SessionProvider } from "next-auth/react";
+
+import AuthButton from "@/components/AuthButton";
+
 export default function RootLayout({
   children,
 }: Readonly<{

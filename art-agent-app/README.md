@@ -24,7 +24,7 @@ Para garantir tanto a velocidade da coleta quanto a precisão dos dados, o siste
 - **Objetivo**: Inserir um grande volume de notícias no banco de dados rapidamente para que não se percam.
 
 ### Fase 2: Validação e Sinalização
-- **O quê**: No momento da inserção, o `NewsService` realiza uma verificação de sanidade na data de publicação.
+- **O quê**: No momento da inserção, o `NewsService` realiza uma verificação de sanidade na data de publicação usando o `date-validator`.
 - **Objetivo**: Se a data for suspeita (ex: muito antiga, no futuro, ou uma data padrão), o artigo recebe o status `PENDING_ENRICHMENT`. Caso contrário, recebe `PROCESSED`.
 
 ### Fase 3: Enriquecimento Assíncrono
@@ -40,7 +40,7 @@ Este pipeline garante que o dashboard sempre tenha notícias frescas, enquanto a
 ### Pré-requisitos
 
 - Node.js 18+
-- npm ou yarn
+- npm
 
 ### Instalação
 
@@ -53,12 +53,13 @@ cd art-agent-app
 npm install
 
 # 3. Configure as variáveis de ambiente
-# Crie um arquivo .env.local na raiz e adicione a linha abaixo:
+# Crie um arquivo .env na raiz do projeto e adicione a linha abaixo:
 DATABASE_URL="file:./prisma/dev.db"
 
 # 4. Configure e popule o banco de dados
-# Este comando aplica as migrações e garante que o schema está em sincronia.
-npx prisma migrate dev
+# Este comando reseta o banco de dados, aplica as migrações e executa o seed.
+# O seed popula as categorias de tags iniciais.
+npm run db:reset
 
 # 5. Inicie o servidor de desenvolvimento
 npm run dev
@@ -66,14 +67,32 @@ npm run dev
 
 Acesse `http://localhost:3000` no seu navegador.
 
+---
+
+## 🛠️ Scripts NPM Essenciais
+
+- `npm run dev`: Inicia o servidor de desenvolvimento com hot-reload.
+- `npm run build`: Gera a build de produção do projeto.
+- `npm run start`: Inicia um servidor de produção (requer `npm run build` antes).
+
+### Scripts de Banco de Dados
+
+- `npm run prisma:migrate`: Cria e aplica uma nova migração no banco de dados.
+- `npm run db:push`: Sincroniza o schema do Prisma com o banco de dados (sem criar migrações).
+- `npm run db:reset`: **(Destrutivo)** Apaga o banco de dados, aplica todas as migrações e executa o `seed`. Ideal para um início limpo.
+- `npm run db:seed`: Executa o script `prisma/seed.ts` para popular o banco com dados iniciais (ex: categorias de tags).
+- `npm run prisma:studio`: Abre a interface gráfica do Prisma para visualizar e editar os dados do banco.
+
+---
+
 ## 📁 Estrutura do Projeto
 
 ```
 src/
 ├── app/
 │   ├── api/                  # Rotas da API (Next.js)
-│   │   ├── news/             # GET /api/news - Listar notícias
-│   │   ├── feeds/            # GET /api/feeds - Listar feeds RSS
+│   │   ├── news/             # GET /api/news - Listar notícias com filtros
+│   │   ├── feeds/            # GET/POST /api/feeds - Gerenciar feeds RSS
 │   │   ├── tag-categories/   # GET/POST /api/tag-categories - Gerenciar tags
 │   │   └── enrich-articles/  # GET /api/enrich-articles - Endpoint do Worker
 │   │   └── reports/          # Endpoints para os gráficos de relatórios
@@ -84,23 +103,69 @@ src/
 │   ├── db.ts                 # Cliente Prisma (singleton)
 │   ├── cron-job.ts           # Agendador de todas as tarefas (cron jobs)
 │   ├── tag-helper.ts         # Lógica de categorização por tags
-│   ├── date-validator.ts     # Utilitário para validar datas
+│   ├── date-validator.ts     # Utilitário para validar e sinalizar datas suspeitas
 │   └── scrapers/
-│       └── google-news-web-scraper.ts # Scraper com Puppeteer
+│       └── google-news-web-scraper.ts # Scraper com Puppeteer para deep scrape
 ├── services/
-│   ├── NewsService.ts        # Lógica de negócio para salvar e buscar notícias
+│   ├── NewsService.ts        # Lógica de negócio para salvar, buscar e limpar notícias
 │   └── ScraperService.ts     # Orquestra os diferentes scrapers
-└── scripts/                  # Scripts de administração e testes manuais
+└── scripts/                  # Scripts de administração e testes manuais (via ts-node)
 
 prisma/
-├── schema.prisma             # Definição do banco de dados
+├── schema.prisma             # Definição dos modelos e do banco de dados
+├── seed.ts                   # Script para popular o banco com dados iniciais
 └── migrations/               # Histórico de migrações do schema
 
 public/                       # Arquivos estáticos
-.env.local                   # Variáveis de ambiente (NÃO versionado)
+.env                          # Variáveis de ambiente (NÃO versionado)
 ```
 
-## 🗄️ Banco de Dados
+---
+
+## 🗄️ Banco de Dados (Prisma)
+
+O schema (`prisma/schema.prisma`) define os seguintes modelos principais:
+
+- **`NewsArticle`**: Armazena cada notícia coletada.
+  - `link`: Campo `@@unique` para evitar duplicatas.
+  - `newsDate`: A data da notícia, que pode ser corrigida pelo processo de enriquecimento.
+  - `status`: Enum (`ArticleStatus`) que rastreia o artigo no pipeline (`PROCESSED`, `PENDING_ENRICHMENT`, `ENRICHED`).
+  - `tags`: Um campo `String` que armazena um array de tags em formato JSON.
+  - `summary`: O resumo da notícia, armazenado como texto puro após a limpeza.
+
+- **`RSSFeed`**: Armazena as fontes de notícias (feeds RSS e scrapers).
+
+- **`TagCategory`**: Define as categorias de tags, suas palavras-chave e se estão ativas.
+
+---
+
+## 🔄 Workflows Comuns
+
+### Adicionar uma Nova Categoria de Tag
+
+1.  **Via Frontend**: Acesse a página `/tags`.
+2.  Clique em "Adicionar Categoria".
+3.  Preencha o nome, as palavras-chave (separadas por vírgula) e escolha uma cor.
+4.  Ative a categoria.
+5.  O sistema começará a usar as novas palavras-chave para taguear notícias automaticamente.
+
+### Forçar a Atualização dos Feeds
+
+Para buscar notícias imediatamente sem esperar o cron job, você pode acionar a API manualmente:
+
+```bash
+# Use a extensão 'REST Client' no VS Code ou uma ferramenta como o Postman
+GET http://localhost:3000/api/update-feeds
+```
+
+### Limpar o Banco de Dados e Recomeçar
+
+Se precisar de um ambiente limpo, o script `db:reset` é a melhor opção:
+
+```bash
+npm run db:reset
+```
+Isso irá apagar todos os dados, recriar a estrutura do banco e popular as categorias de tags definidas no `seed.ts`.
 
 ### Modelo `NewsArticle`
 
